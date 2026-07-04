@@ -6,6 +6,9 @@
     <title>ระบบนิเทศการสอน โรงเรียนวัดแม่กะ</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- ย้าย Script ของ Bootstrap มาโหลดก่อน -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 
     <style>
@@ -30,6 +33,7 @@
 </div>
 
 <div class="container mb-5">
+    <!-- แท็บเมนู -->
     <ul class="nav nav-tabs mb-4" id="mainTab" role="tablist">
         <li class="nav-item">
             <button class="nav-link active" id="form-tab" data-bs-toggle="tab" data-bs-target="#form-pane" type="button">1. บันทึกการนิเทศ</button>
@@ -39,8 +43,10 @@
         </li>
     </ul>
 
+    <!-- เนื้อหาแท็บ -->
     <div class="tab-content" id="mainTabContent">
         
+        <!-- แท็บ 1: ฟอร์มบันทึก -->
         <div class="tab-pane fade show active" id="form-pane">
             <form id="evalForm">
                 <div class="card shadow-sm mb-4">
@@ -135,6 +141,7 @@
             </form>
         </div>
 
+        <!-- แท็บ 2: สรุปผลการนิเทศ -->
         <div class="tab-pane fade" id="summary-pane">
             <div class="card shadow-sm mb-5">
                 <div class="card-header bg-dark text-white">ตารางสรุปผลการนิเทศย้อนหลัง</div>
@@ -164,6 +171,7 @@
     </div>
 </div>
 
+<!-- Modal สำหรับผู้บริหารลงนาม -->
 <div class="modal fade" id="execSignModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -220,7 +228,6 @@
         evaluatorSelect.innerHTML += `<option value="${name}">${name}</option>`;
     });
 
-    // กำหนด Canvas ทั้งหมด
     const padEvaluatee = new SignaturePad(document.getElementById('signEvaluatee'));
     const padEvaluator = new SignaturePad(document.getElementById('signEvaluator'));
     const padDeputy = new SignaturePad(document.getElementById('signDeputy'));
@@ -306,7 +313,6 @@
             htmlContent += `<tr>
                 <td class="question-text"><strong>${catNum}.${qNum}</strong> ${qText}</td>`;
             for (let score = 5; score >= 1; score--) {
-                // เพิ่ม required เพื่อบังคับตอบทุกข้อ
                 htmlContent += `<td class="text-center">
                     <input class="form-check-input score-radio" type="radio" name="q${catNum}_${qNum}" value="${score}" required onchange="calculateScore()">
                 </td>`;
@@ -337,7 +343,7 @@
     
     setTimeout(resizeCanvas, 500);
     document.getElementById('form-tab').addEventListener('shown.bs.tab', resizeCanvas);
-    document.getElementById('execSignModal').addEventListener('shown.bs.modal', resizeCanvas); // ปรับขนาดเมื่อเปิด Modal
+    document.getElementById('execSignModal').addEventListener('shown.bs.modal', resizeCanvas);
 
     let totalScore = 0; let percentage = 0; let qualityStr = ''; let categoryScores = [0,0,0,0,0,0,0];
 
@@ -362,14 +368,12 @@
         document.getElementById('qualityText').innerText = qualityStr;
     }
 
-    // ฟังก์ชันแปลงรูปแบบวันที่
     function formatDateThai(dateString) {
         if(!dateString || dateString === '-') return '-';
         const date = new Date(dateString);
         return date.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
     }
 
-    // ฟังก์ชันโหลดข้อมูลแท็บสรุปผล
     function loadSummary() {
         const tbody = document.getElementById('summaryTableBody');
         tbody.innerHTML = '<tr><td colspan="7" class="text-muted">กำลังโหลดข้อมูล...</td></tr>';
@@ -398,11 +402,9 @@
         });
     }
 
-    // 1. กดปุ่มบันทึกข้อมูลหน้าแรก
     document.getElementById('evalForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
-        // ตรวจสอบว่ากรอกคะแนนครบทุกข้อหรือไม่ (ทำงานอัตโนมัติจาก attribute 'required')
         if (!this.checkValidity()) {
             this.reportValidity();
             return;
@@ -453,14 +455,21 @@
         .finally(() => { btn.innerHTML = 'บันทึกข้อมูล'; btn.disabled = false; });
     });
 
-    // 2. การจัดการ Modal ลงนามผู้บริหาร
-    const execModal = new bootstrap.Modal(document.getElementById('execSignModal'));
+    // 2. การจัดการ Modal ลงนามผู้บริหาร (แก้บั๊ก)
+    let execModal;
+    
     function openExecModal(rowIndex) {
         let pwd = prompt("กรุณากรอกรหัสผ่านเพื่อเข้าสู่ระบบลงนามผู้บริหาร:");
         if (pwd !== 'siri') {
             alert("รหัสผ่านไม่ถูกต้อง!");
             return;
         }
+        
+        // กำหนดค่า Modal ตอนที่กดปุ่ม เพื่อป้องกันปัญหา Bootstrap โหลดไม่ทัน
+        if(!execModal) {
+            execModal = new bootstrap.Modal(document.getElementById('execSignModal'));
+        }
+        
         document.getElementById('modalRowIndex').value = rowIndex;
         document.getElementById('deputyComment').value = '';
         document.getElementById('directorComment').value = '';
@@ -501,7 +510,7 @@
         .then(res => {
             if(res.status === 'success') {
                 alert('สร้างไฟล์ PDF สำเร็จ!');
-                loadSummary(); // รีเฟรชตารางเพื่อแสดงปุ่ม "โหลด"
+                loadSummary(); 
             } else {
                 alert('เกิดข้อผิดพลาด: ' + res.message);
             }
@@ -510,6 +519,5 @@
     }
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
