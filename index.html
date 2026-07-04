@@ -10,22 +10,14 @@
 
     <style>
         body { font-family: 'Sarabun', sans-serif; background-color: #f8f9fa; }
-        .header-bg {
-            background-color: #C8102E; color: #FFD100;
-            padding: 20px 0; border-bottom: 5px solid #FFD100;
-        }
-        .logo-circle {
-            background-color: white; border-radius: 50%;
-            padding: 10px; width: 120px; height: 120px;
-            object-fit: contain; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
+        .header-bg { background-color: #C8102E; color: #FFD100; padding: 20px 0; border-bottom: 5px solid #FFD100; }
+        .logo-circle { background-color: white; border-radius: 50%; padding: 10px; width: 120px; height: 120px; object-fit: contain; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .card-header { background-color: #C8102E; color: white; font-weight: 600; }
         .btn-primary { background-color: #C8102E; border-color: #C8102E; }
         .btn-primary:hover { background-color: #a00d24; }
         .nav-tabs .nav-link { color: #C8102E; font-weight: 500; }
         .nav-tabs .nav-link.active { color: white; background-color: #C8102E; border-color: #C8102E; }
         .signature-pad { border: 2px dashed #ccc; border-radius: 5px; width: 100%; height: 150px; background-color: white; }
-        .comment-pad { border: 1px solid #C8102E; width: 100%; height: 120px; background-color: #fffafb; }
         .table-responsive { margin-bottom: 20px; }
         .question-text { text-align: left; font-size: 15px; }
     </style>
@@ -39,17 +31,17 @@
 
 <div class="container mb-5">
     <ul class="nav nav-tabs mb-4" id="mainTab" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="form-tab" data-bs-toggle="tab" data-bs-target="#form-pane" type="button" role="tab">1. บันทึกการนิเทศ</button>
+        <li class="nav-item">
+            <button class="nav-link active" id="form-tab" data-bs-toggle="tab" data-bs-target="#form-pane" type="button">1. บันทึกการนิเทศ</button>
         </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary-pane" type="button" role="tab" onclick="loadSummary()">2. สรุปผลการนิเทศ</button>
+        <li class="nav-item">
+            <button class="nav-link" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary-pane" type="button" onclick="loadSummary()">2. สรุปผลการนิเทศ</button>
         </li>
     </ul>
 
     <div class="tab-content" id="mainTabContent">
         
-        <div class="tab-pane fade show active" id="form-pane" role="tabpanel">
+        <div class="tab-pane fade show active" id="form-pane">
             <form id="evalForm">
                 <div class="card shadow-sm mb-4">
                     <div class="card-header">ข้อมูลทั่วไป</div>
@@ -79,7 +71,7 @@
                             <label class="form-label">รหัสวิชา</label>
                             <input type="text" class="form-control" id="subjectCode" required>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label">ระดับชั้น</label>
                             <select class="form-select" id="classLevel" required>
                                 <option value="">-- เลือกระดับชั้น --</option>
@@ -91,13 +83,21 @@
                                 <option value="ชั้นประถมศึกษาปีที่ 6">ชั้นประถมศึกษาปีที่ 6</option>
                             </select>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label">วันที่สอน</label>
                             <input type="date" class="form-control" id="date" required>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">เวลา (พิมพ์เป็นข้อความ)</label>
+                        <div class="col-md-3">
+                            <label class="form-label">เวลา</label>
                             <input type="text" class="form-control" id="time" placeholder="เช่น 09.00 - 10.00 น." required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">ครั้งที่</label>
+                            <select class="form-select" id="sessionRound" required>
+                                <option value="">-- เลือก --</option>
+                                <option value="1/2569">1/2569</option>
+                                <option value="2/2569">2/2569</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -126,55 +126,82 @@
                             <canvas id="signEvaluator" class="signature-pad"></canvas>
                             <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="padEvaluator.clear()">ลบลายเซ็น</button>
                         </div>
-                        <hr>
-                        <div class="col-md-6 text-center">
-                            <label class="form-label text-muted">รองผู้อำนวยการโรงเรียนวัดแม่กะ</label>
-                            <input type="text" class="form-control text-center" value="นายจักรพงศ์ จันทวงศ์" readonly>
-                        </div>
-                        <div class="col-md-6 text-center">
-                            <label class="form-label text-muted">ผู้อำนวยการโรงเรียนวัดแม่กะ</label>
-                            <input type="text" class="form-control text-center" value="นางสาวศิริยา อินทกาโมทย์" readonly>
-                        </div>
                     </div>
                 </div>
 
                 <div class="d-grid gap-2 mb-5">
-                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">บันทึกข้อมูลและสร้าง PDF</button>
+                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">บันทึกข้อมูล</button>
                 </div>
             </form>
         </div>
 
-        <div class="tab-pane fade" id="summary-pane" role="tabpanel">
+        <div class="tab-pane fade" id="summary-pane">
             <div class="card shadow-sm mb-5">
                 <div class="card-header bg-dark text-white">ตารางสรุปผลการนิเทศย้อนหลัง</div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover align-middle">
+                        <table class="table table-striped table-hover align-middle text-center">
                             <thead class="table-light">
                                 <tr>
-                                    <th>ชื่อผู้รับการนิเทศ</th>
-                                    <th>รายวิชา</th>
-                                    <th>รหัสวิชา</th>
-                                    <th>ระดับชั้น</th>
+                                    <th>ครั้งที่</th>
                                     <th>วันที่สอน</th>
+                                    <th>ชื่อผู้รับการนิเทศ</th>
                                     <th>ผู้นิเทศ</th>
-                                    <th>รูปแบบการนิเทศ</th>
-                                    <th>URL ไฟล์ PDF</th>
+                                    <th>รายวิชา</th>
+                                    <th>ผู้บริหารลงนาม</th>
+                                    <th>ไฟล์ PDF</th>
                                 </tr>
                             </thead>
                             <tbody id="summaryTableBody">
-                                <tr><td colspan="8" class="text-center text-muted">กำลังโหลดข้อมูล...</td></tr>
+                                <tr><td colspan="7" class="text-muted">กำลังโหลดข้อมูล...</td></tr>
                             </tbody>
                         </table>
-                    </div>
-                    <div class="text-end">
-                        <button class="btn btn-sm btn-outline-primary" onclick="loadSummary()">รีเฟรชข้อมูล</button>
                     </div>
                 </div>
             </div>
         </div>
 
     </div>
+</div>
+
+<div class="modal fade" id="execSignModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">ส่วนการลงนามผู้บริหาร</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="modalRowIndex">
+        
+        <div class="mb-4">
+            <label class="form-label fw-bold text-primary">ความเห็นของรองผู้อำนวยการโรงเรียน</label>
+            <textarea class="form-control mb-2" id="deputyComment" rows="2"></textarea>
+            <div class="text-center">
+                <canvas id="signDeputy" class="signature-pad"></canvas><br>
+                <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="padDeputy.clear()">ลบลายเซ็น</button>
+                <p class="mt-2 mb-0">( นายจักรพงศ์ จันทวงศ์ )</p>
+                <small class="text-muted">รองผู้อำนวยการโรงเรียนวัดแม่กะ</small>
+            </div>
+        </div>
+        <hr>
+        <div class="mb-4">
+            <label class="form-label fw-bold text-primary">ความเห็นของผู้อำนวยการโรงเรียน</label>
+            <textarea class="form-control mb-2" id="directorComment" rows="2"></textarea>
+            <div class="text-center">
+                <canvas id="signDirector" class="signature-pad"></canvas><br>
+                <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="padDirector.clear()">ลบลายเซ็น</button>
+                <p class="mt-2 mb-0">( นางสาวศิริยา อินทกาโมทย์ )</p>
+                <small class="text-muted">ผู้อำนวยการโรงเรียนวัดแม่กะ</small>
+            </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+        <button type="button" class="btn btn-primary" id="saveExecBtn" onclick="saveExecSignature()">บันทึกการลงนามผู้บริหาร</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -193,9 +220,11 @@
         evaluatorSelect.innerHTML += `<option value="${name}">${name}</option>`;
     });
 
+    // กำหนด Canvas ทั้งหมด
     const padEvaluatee = new SignaturePad(document.getElementById('signEvaluatee'));
     const padEvaluator = new SignaturePad(document.getElementById('signEvaluator'));
-    const commentPads = [];
+    const padDeputy = new SignaturePad(document.getElementById('signDeputy'));
+    const padDirector = new SignaturePad(document.getElementById('signDirector'));
 
     const categoriesData = [
         { title: "1. การเตรียมความพร้อมก่อนสอน", questions: [
@@ -277,6 +306,7 @@
             htmlContent += `<tr>
                 <td class="question-text"><strong>${catNum}.${qNum}</strong> ${qText}</td>`;
             for (let score = 5; score >= 1; score--) {
+                // เพิ่ม required เพื่อบังคับตอบทุกข้อ
                 htmlContent += `<td class="text-center">
                     <input class="form-check-input score-radio" type="radio" name="q${catNum}_${qNum}" value="${score}" required onchange="calculateScore()">
                 </td>`;
@@ -288,20 +318,13 @@
                     </table>
                 </div>
                 <div>
-                    <label class="form-label fw-bold">ข้อเสนอแนะหมวด ${catNum} (เขียนด้วยปากกา/นิ้ว)</label>
-                    <canvas id="commentCanvas${catNum}" class="comment-pad"></canvas>
-                    <button type="button" class="btn btn-sm btn-outline-danger mt-1" onclick="commentPads[${index}].clear()">ลบข้อเสนอแนะ</button>
+                    <label class="form-label fw-bold">ข้อเสนอแนะหมวด ${catNum}</label>
+                    <textarea class="form-control" id="commentText${catNum}" rows="2" placeholder="พิมพ์ข้อเสนอแนะ..."></textarea>
                 </div>
             </div>
         </div>`;
     });
     questionsContainer.innerHTML = htmlContent;
-
-    categoriesData.forEach((cat, index) => {
-        let canvas = document.getElementById(`commentCanvas${index + 1}`);
-        let pad = new SignaturePad(canvas);
-        commentPads.push(pad);
-    });
 
     function resizeCanvas() {
         document.querySelectorAll('canvas').forEach(canvas => {
@@ -310,30 +333,22 @@
             canvas.height = canvas.offsetHeight * ratio;
             canvas.getContext("2d").scale(ratio, ratio);
         });
-        padEvaluatee.clear(); padEvaluator.clear();
-        commentPads.forEach(pad => pad.clear());
     }
     
-    // หน่วงเวลาให้ UI โหลดเสร็จก่อนปรับขนาด Canvas และตอนเปลี่ยนแท็บ
     setTimeout(resizeCanvas, 500);
-    document.getElementById('form-tab').addEventListener('shown.bs.tab', function () { resizeCanvas(); });
+    document.getElementById('form-tab').addEventListener('shown.bs.tab', resizeCanvas);
+    document.getElementById('execSignModal').addEventListener('shown.bs.modal', resizeCanvas); // ปรับขนาดเมื่อเปิด Modal
 
-    let totalScore = 0;
-    let percentage = 0;
-    let qualityStr = '';
-    let categoryScores = [0,0,0,0,0,0,0];
+    let totalScore = 0; let percentage = 0; let qualityStr = ''; let categoryScores = [0,0,0,0,0,0,0];
 
     function calculateScore() {
-        totalScore = 0;
-        categoryScores = [0,0,0,0,0,0,0];
-        
+        totalScore = 0; categoryScores = [0,0,0,0,0,0,0];
         document.querySelectorAll('.score-radio:checked').forEach(radio => {
             let val = parseInt(radio.value);
             totalScore += val;
             let catIndex = parseInt(radio.name.charAt(1)) - 1;
             categoryScores[catIndex] += val;
         });
-
         percentage = ((totalScore / 200) * 100).toFixed(2);
         
         if(percentage >= 91) qualityStr = "ดีมาก";
@@ -347,48 +362,54 @@
         document.getElementById('qualityText').innerText = qualityStr;
     }
 
-    // ฟังก์ชันโหลดข้อมูลตารางสรุปผล (Tab 2)
+    // ฟังก์ชันแปลงรูปแบบวันที่
+    function formatDateThai(dateString) {
+        if(!dateString || dateString === '-') return '-';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    // ฟังก์ชันโหลดข้อมูลแท็บสรุปผล
     function loadSummary() {
         const tbody = document.getElementById('summaryTableBody');
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">กำลังโหลดข้อมูล...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-muted">กำลังโหลดข้อมูล...</td></tr>';
         
         fetch(GAS_URL + "?action=getSummary")
         .then(response => response.json())
         .then(data => {
-            if(data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">ยังไม่มีข้อมูลการประเมิน</td></tr>';
-                return;
-            }
+            if(data.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="text-muted">ไม่มีข้อมูล</td></tr>'; return; }
             let html = '';
-            // นำข้อมูลล่าสุดขึ้นก่อน (reverse)
             data.reverse().forEach(row => {
-                let link = row.pdfUrl && row.pdfUrl !== '#' 
-                    ? `<a href="${row.pdfUrl}" target="_blank" class="btn btn-sm btn-outline-danger">เปิด PDF</a>` 
-                    : '<span class="text-muted">ไม่มีไฟล์</span>';
+                let loadBtn = row.pdfUrl ? `<a href="${row.pdfUrl}" target="_blank" class="btn btn-sm btn-outline-danger">โหลด</a>` : '';
                 html += `<tr>
-                    <td>${row.evaluatee}</td>
-                    <td>${row.subject}</td>
-                    <td>${row.subjectCode}</td>
-                    <td>${row.classLevel}</td>
-                    <td>${row.date}</td>
-                    <td>${row.evaluator}</td>
-                    <td>${row.format}</td>
-                    <td>${link}</td>
+                    <td>${row.session}</td>
+                    <td>${formatDateThai(row.date)}</td>
+                    <td class="text-start">${row.evaluatee}</td>
+                    <td class="text-start">${row.evaluator}</td>
+                    <td class="text-start">${row.subject}</td>
+                    <td><button class="btn btn-sm btn-primary" onclick="openExecModal(${row.rowIndex})">ลงนาม</button></td>
+                    <td>
+                        <button class="btn btn-sm btn-warning mb-1" onclick="generatePDF(${row.rowIndex}, this)">สร้าง</button>
+                        ${loadBtn}
+                    </td>
                 </tr>`;
             });
             tbody.innerHTML = html;
-        })
-        .catch(error => {
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">เกิดข้อผิดพลาดในการดึงข้อมูล</td></tr>';
         });
     }
 
+    // 1. กดปุ่มบันทึกข้อมูลหน้าแรก
     document.getElementById('evalForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
+        // ตรวจสอบว่ากรอกคะแนนครบทุกข้อหรือไม่ (ทำงานอัตโนมัติจาก attribute 'required')
+        if (!this.checkValidity()) {
+            this.reportValidity();
+            return;
+        }
+
         let btn = document.getElementById('submitBtn');
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> กำลังบันทึกข้อมูลและสร้าง PDF...';
-        btn.disabled = true;
+        btn.innerHTML = 'กำลังบันทึกข้อมูล...'; btn.disabled = true;
 
         let formData = {
             evaluateeName: document.getElementById('evaluateeName').value,
@@ -399,11 +420,9 @@
             classLevel: document.getElementById('classLevel').value,
             date: document.getElementById('date').value,
             time: document.getElementById('time').value,
+            sessionRound: document.getElementById('sessionRound').value,
             
-            totalScore: totalScore,
-            percent: percentage,
-            qualityLevel: qualityStr,
-            
+            totalScore: totalScore, percent: percentage, qualityLevel: qualityStr,
             cat1: categoryScores[0], cat2: categoryScores[1], cat3: categoryScores[2],
             cat4: categoryScores[3], cat5: categoryScores[4], cat6: categoryScores[5], cat7: categoryScores[6],
             
@@ -418,35 +437,77 @@
                 let radio = document.querySelector(`input[name="q${catNum}_${qNum}"]:checked`);
                 formData[`q${catNum}_${qNum}`] = radio ? radio.value : 0;
             });
-            formData[`comment${catNum}`] = commentPads[index].isEmpty() ? '' : commentPads[index].toDataURL();
+            formData[`comment${catNum}`] = document.getElementById(`commentText${catNum}`).value;
         });
 
-        fetch(GAS_URL, {
-            method: 'POST',
-            body: JSON.stringify(formData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if(data.status === 'success') {
-                alert('บันทึกข้อมูลสำเร็จ! ระบบได้สร้างไฟล์ PDF เรียบร้อยแล้ว');
-                window.open(data.pdfUrl, '_blank');
+        fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'saveForm', data: formData }) })
+        .then(res => res.json())
+        .then(res => {
+            if(res.status === 'success') {
+                alert('บันทึกข้อมูลสำเร็จ (สามารถไปที่แท็บสรุปผลเพื่อลงนามผู้บริหาร และสร้าง PDF ได้)');
                 document.getElementById('evalForm').reset();
-                resizeCanvas();
+                padEvaluatee.clear(); padEvaluator.clear();
                 calculateScore();
-                // รีโหลดตารางสรุปผลอัพเดทใหม่
-                loadSummary(); 
-            } else {
-                alert('เกิดข้อผิดพลาด: ' + data.message);
             }
         })
-        .catch(error => {
-            alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้: ' + error);
-        })
-        .finally(() => {
-            btn.innerHTML = 'บันทึกข้อมูลและสร้าง PDF';
-            btn.disabled = false;
-        });
+        .finally(() => { btn.innerHTML = 'บันทึกข้อมูล'; btn.disabled = false; });
     });
+
+    // 2. การจัดการ Modal ลงนามผู้บริหาร
+    const execModal = new bootstrap.Modal(document.getElementById('execSignModal'));
+    function openExecModal(rowIndex) {
+        let pwd = prompt("กรุณากรอกรหัสผ่านเพื่อเข้าสู่ระบบลงนามผู้บริหาร:");
+        if (pwd !== 'siri') {
+            alert("รหัสผ่านไม่ถูกต้อง!");
+            return;
+        }
+        document.getElementById('modalRowIndex').value = rowIndex;
+        document.getElementById('deputyComment').value = '';
+        document.getElementById('directorComment').value = '';
+        padDeputy.clear(); padDirector.clear();
+        execModal.show();
+    }
+
+    function saveExecSignature() {
+        let btn = document.getElementById('saveExecBtn');
+        btn.innerHTML = 'กำลังบันทึก...'; btn.disabled = true;
+
+        let payload = {
+            rowIndex: document.getElementById('modalRowIndex').value,
+            deputyComment: document.getElementById('deputyComment').value,
+            directorComment: document.getElementById('directorComment').value,
+            signDeputy: padDeputy.isEmpty() ? '' : padDeputy.toDataURL(),
+            signDirector: padDirector.isEmpty() ? '' : padDirector.toDataURL()
+        };
+
+        fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'saveExecSign', data: payload }) })
+        .then(res => res.json())
+        .then(res => {
+            if(res.status === 'success') {
+                alert('บันทึกการลงนามผู้บริหารสำเร็จ!');
+                execModal.hide();
+            }
+        })
+        .finally(() => { btn.innerHTML = 'บันทึกการลงนามผู้บริหาร'; btn.disabled = false; });
+    }
+
+    // 3. ฟังก์ชันสร้าง PDF
+    function generatePDF(rowIndex, btnElement) {
+        btnElement.innerHTML = 'กำลังสร้าง...';
+        btnElement.disabled = true;
+
+        fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'generatePDF', rowIndex: rowIndex }) })
+        .then(res => res.json())
+        .then(res => {
+            if(res.status === 'success') {
+                alert('สร้างไฟล์ PDF สำเร็จ!');
+                loadSummary(); // รีเฟรชตารางเพื่อแสดงปุ่ม "โหลด"
+            } else {
+                alert('เกิดข้อผิดพลาด: ' + res.message);
+            }
+        })
+        .finally(() => { btnElement.innerHTML = 'สร้าง'; btnElement.disabled = false; });
+    }
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
