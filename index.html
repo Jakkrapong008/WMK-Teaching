@@ -6,8 +6,6 @@
     <title>ระบบนิเทศการสอน โรงเรียนวัดแม่กะ</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- ย้าย Script ของ Bootstrap มาโหลดก่อน -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 
@@ -33,7 +31,6 @@
 </div>
 
 <div class="container mb-5">
-    <!-- แท็บเมนู -->
     <ul class="nav nav-tabs mb-4" id="mainTab" role="tablist">
         <li class="nav-item">
             <button class="nav-link active" id="form-tab" data-bs-toggle="tab" data-bs-target="#form-pane" type="button">1. บันทึกการนิเทศ</button>
@@ -43,23 +40,39 @@
         </li>
     </ul>
 
-    <!-- เนื้อหาแท็บ -->
     <div class="tab-content" id="mainTabContent">
-        
-        <!-- แท็บ 1: ฟอร์มบันทึก -->
         <div class="tab-pane fade show active" id="form-pane">
             <form id="evalForm">
                 <div class="card shadow-sm mb-4">
                     <div class="card-header">ข้อมูลทั่วไป</div>
                     <div class="card-body row g-3">
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <label class="form-label">ชื่อผู้รับการนิเทศ</label>
                             <select class="form-select" id="evaluateeName" required><option value="">-- เลือกชื่อ --</option></select>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-3">
+                            <label class="form-label">ตำแหน่งผู้รับการนิเทศ</label>
+                            <select class="form-select" id="evaluateePosition" required>
+                                <option value="">-- เลือกตำแหน่ง --</option>
+                                <option value="ครู">ครู</option>
+                                <option value="รองผู้อำนวยการสถานศึกษา">รองผู้อำนวยการสถานศึกษา</option>
+                                <option value="ผู้อำนวยการสถานศึกษา">ผู้อำนวยการสถานศึกษา</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
                             <label class="form-label">ชื่อผู้นิเทศ</label>
                             <select class="form-select" id="evaluatorName" required><option value="">-- เลือกชื่อ --</option></select>
                         </div>
+                        <div class="col-md-3">
+                            <label class="form-label">ตำแหน่งผู้นิเทศ</label>
+                            <select class="form-select" id="evaluatorPosition" required>
+                                <option value="">-- เลือกตำแหน่ง --</option>
+                                <option value="ครู">ครู</option>
+                                <option value="รองผู้อำนวยการสถานศึกษา">รองผู้อำนวยการสถานศึกษา</option>
+                                <option value="ผู้อำนวยการสถานศึกษา">ผู้อำนวยการสถานศึกษา</option>
+                            </select>
+                        </div>
+
                         <div class="col-md-4">
                             <label class="form-label">รูปแบบการนิเทศ</label>
                             <select class="form-select" id="supervisionFormat" required>
@@ -141,7 +154,6 @@
             </form>
         </div>
 
-        <!-- แท็บ 2: สรุปผลการนิเทศ -->
         <div class="tab-pane fade" id="summary-pane">
             <div class="card shadow-sm mb-5">
                 <div class="card-header bg-dark text-white">ตารางสรุปผลการนิเทศย้อนหลัง</div>
@@ -155,8 +167,8 @@
                                     <th>ชื่อผู้รับการนิเทศ</th>
                                     <th>ผู้นิเทศ</th>
                                     <th>รายวิชา</th>
-                                    <th>ผู้บริหารลงนาม</th>
-                                    <th>ไฟล์ PDF</th>
+                                    <th width="15%">ผู้บริหารลงนาม</th>
+                                    <th width="15%">ไฟล์ PDF</th>
                                 </tr>
                             </thead>
                             <tbody id="summaryTableBody">
@@ -171,42 +183,34 @@
     </div>
 </div>
 
-<!-- Modal สำหรับผู้บริหารลงนาม -->
 <div class="modal fade" id="execSignModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title">ส่วนการลงนามผู้บริหาร</h5>
+        <h5 class="modal-title" id="modalTitle">ส่วนการลงนามผู้บริหาร</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <input type="hidden" id="modalRowIndex">
+        <input type="hidden" id="modalRole">
+        
+        <div class="alert alert-info text-start shadow-sm mb-4" id="modalSummaryInfo">
+            </div>
         
         <div class="mb-4">
-            <label class="form-label fw-bold text-primary">ความเห็นของรองผู้อำนวยการโรงเรียน</label>
-            <textarea class="form-control mb-2" id="deputyComment" rows="2"></textarea>
+            <label class="form-label fw-bold text-primary" id="modalCommentLabel">ความเห็นของผู้บริหาร</label>
+            <textarea class="form-control mb-3" id="execComment" rows="2" placeholder="กรอกข้อเสนอแนะ..."></textarea>
             <div class="text-center">
-                <canvas id="signDeputy" class="signature-pad"></canvas><br>
-                <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="padDeputy.clear()">ลบลายเซ็น</button>
-                <p class="mt-2 mb-0">( นายจักรพงศ์ จันทวงศ์ )</p>
-                <small class="text-muted">รองผู้อำนวยการโรงเรียนวัดแม่กะ</small>
-            </div>
-        </div>
-        <hr>
-        <div class="mb-4">
-            <label class="form-label fw-bold text-primary">ความเห็นของผู้อำนวยการโรงเรียน</label>
-            <textarea class="form-control mb-2" id="directorComment" rows="2"></textarea>
-            <div class="text-center">
-                <canvas id="signDirector" class="signature-pad"></canvas><br>
-                <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="padDirector.clear()">ลบลายเซ็น</button>
-                <p class="mt-2 mb-0">( นางสาวศิริยา อินทกาโมทย์ )</p>
-                <small class="text-muted">ผู้อำนวยการโรงเรียนวัดแม่กะ</small>
+                <canvas id="signExec" class="signature-pad"></canvas><br>
+                <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="padExec.clear()">ลบลายเซ็น</button>
+                <p class="mt-2 mb-0 fw-bold" id="execNameDisplay"></p>
+                <small class="text-muted" id="execPosDisplay"></small>
             </div>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
-        <button type="button" class="btn btn-primary" id="saveExecBtn" onclick="saveExecSignature()">บันทึกการลงนามผู้บริหาร</button>
+        <button type="button" class="btn btn-primary" id="saveExecBtn" onclick="saveExecSignature()">บันทึกการลงนาม</button>
       </div>
     </div>
   </div>
@@ -230,69 +234,20 @@
 
     const padEvaluatee = new SignaturePad(document.getElementById('signEvaluatee'));
     const padEvaluator = new SignaturePad(document.getElementById('signEvaluator'));
-    const padDeputy = new SignaturePad(document.getElementById('signDeputy'));
-    const padDirector = new SignaturePad(document.getElementById('signDirector'));
+    const padExec = new SignaturePad(document.getElementById('signExec')); // ใช้กระดานเดียวใน Modal
 
     const categoriesData = [
-        { title: "1. การเตรียมความพร้อมก่อนสอน", questions: [
-            "จัดทำแผนการเรียนรู้ที่มีองค์ประกอบถูกต้องและครบถ้วน",
-            "จัดสื่ออุปกรณ์การสอนครบถ้วนสอดคล้องกับกิจกรรมการเรียนการสอน",
-            "จัดทำแบบประเมินผลการเรียนรู้สอดคล้องกับตัวชี้วัด/ผลการเรียนรู้"
-        ]},
-        { title: "2. การจัดกิจกรรมการเรียนรู้", questions: [
-            "จัดกิจกรรมสอดคล้องกับตัวชี้วัด/ผลการเรียนรู้",
-            "จัดกิจกรรมตามขั้นตอนที่กำหนดไว้ในแผนการจัดการเรียนรู้",
-            "เปิดโอกาสให้ผู้เรียนมีส่วนร่วมในกิจกรรมอย่างทั่วถึง",
-            "จัดกิจกรรมให้นักเรียนฝึกปฏิบัติจนเกิดทักษะต่างๆ",
-            "ใช้เทคนิคการตั้งคำถาม ให้นักเรียนมีส่วนร่วมแสดงความคิดเห็น",
-            "เลือกใช้เทคนิคการสอนที่ตอบสนองกับความต้องการของนักเรียน",
-            "จัดกิจกรรมส่งเสริมนักเรียนที่เป็นกลุ่มเก่ง",
-            "เลือกใช้กิจกรรมซ่อมเสริมนักเรียนที่เป็นกลุ่มอ่อนเพื่อให้เรียนรู้ทันเพื่อน",
-            "ใช้การเสริมแรงตลอดการจัดกิจกรรมการเรียนรู้",
-            "ตรวจสอบความเข้าใจของนักเรียนระหว่างเรียนอย่างต่อเนื่อง"
-        ]},
-        { title: "3. การใช้สื่อเทคโนโลยี", questions: [
-            "สื่อเทคโนโลยีสอดคล้องกับกิจกรรมการเรียนรู้",
-            "สื่อกระตุ้นความสนใจในการเรียนรู้ของผู้เรียน",
-            "ครูใช้สื่อการสอนเหมาะสม ถูกต้อง คุ้มค่า"
-        ]},
-        { title: "4. การจัดบรรยากาศและบริหารชั้นเรียน", questions: [
-            "จัดบรรยากาศที่เอื้อต่อการเรียนรู้ของผู้เรียน",
-            "ครูกระตุ้นผู้เรียนให้เกิดความสนใจในการเรียนรู้ผ่านสื่อเทคโนโลยี",
-            "ครูคอยให้คำแนะนำและแก้ไขปัญหาแก่ผู้เรียน",
-            "ครูใช้เทคนิคหลากหลายในการควบคุมชั้นเรียน"
-        ]},
-        { title: "5. การวัดผลและประเมินผล", questions: [
-            "ประเมินศักยภาพผู้เรียนก่อนเรียน",
-            "ประเมินศักยภาพผู้เรียนระหว่างเรียน",
-            "ประเมินศักยภาพผู้เรียนหลังเรียน",
-            "ใช้เทคนิคการประเมินตามสภาพจริง",
-            "ผลการจัดการเรียนรู้ทำให้นักเรียนเกิดการเรียนรู้ด้านทักษะ และคุณลักษณะอันพึงประสงค์"
-        ]},
-        { title: "6. ประเมินแผนการจัดการเรียนรู้", questions: [
-            "องค์ประกอบของแผนการจัดการเรียนรู้",
-            "สาระสำคัญ",
-            "มาตรฐานการเรียนรู้และตัวชี้วัด",
-            "จุดประสงค์การเรียนรู้",
-            "สาระการเรียนรู้",
-            "กระบวนการเรียนรู้/กิจกรรมการเรียนรู้",
-            "การวัดและประเมินผลการเรียนรู้",
-            "สื่อการจัดการเรียนรู้หรือแหล่งเรียนรู้"
-        ]},
-        { title: "7. การบริหารจัดการชั้นเรียน", questions: [
-            "มีสัญลักษณ์แสดงชาติ ศาสนา พระมหากษัตริย์",
-            "มีป้ายนิเทศให้ความรู้ มุมประสบการณ์ต่างๆ",
-            "มีมุมผลงาน มุมแสดงความก้าวหน้าของนักเรียน",
-            "ห้องเรียน โต๊ะเก้าอี้นักเรียน สะอาด ปลอดภัย",
-            "มีตู้โต๊ะเก็บสื่อการสอนเป็นระเบียบ สะดวกต่อการหยิบใช้",
-            "ตกแต่งห้องเรียนคำนึงถึงความเรียบง่าย เป็นระเบียบ ประหยัด",
-            "มุมเก็บอุปกรณ์ทำความสะอาดเป็นระเบียบเรียบร้อย"
-        ]}
+        { title: "1. การเตรียมความพร้อมก่อนสอน", questions: ["จัดทำแผนการเรียนรู้ที่มีองค์ประกอบถูกต้องและครบถ้วน", "จัดสื่ออุปกรณ์การสอนครบถ้วนสอดคล้องกับกิจกรรมการเรียนการสอน", "จัดทำแบบประเมินผลการเรียนรู้สอดคล้องกับตัวชี้วัด/ผลการเรียนรู้"] },
+        { title: "2. การจัดกิจกรรมการเรียนรู้", questions: ["จัดกิจกรรมสอดคล้องกับตัวชี้วัด/ผลการเรียนรู้", "จัดกิจกรรมตามขั้นตอนที่กำหนดไว้ในแผนการจัดการเรียนรู้", "เปิดโอกาสให้ผู้เรียนมีส่วนร่วมในกิจกรรมอย่างทั่วถึง", "จัดกิจกรรมให้นักเรียนฝึกปฏิบัติจนเกิดทักษะต่างๆ", "ใช้เทคนิคการตั้งคำถาม ให้นักเรียนมีส่วนร่วมแสดงความคิดเห็น", "เลือกใช้เทคนิคการสอนที่ตอบสนองกับความต้องการของนักเรียน", "จัดกิจกรรมส่งเสริมนักเรียนที่เป็นกลุ่มเก่ง", "เลือกใช้กิจกรรมซ่อมเสริมนักเรียนที่เป็นกลุ่มอ่อนเพื่อให้เรียนรู้ทันเพื่อน", "ใช้การเสริมแรงตลอดการจัดกิจกรรมการเรียนรู้", "ตรวจสอบความเข้าใจของนักเรียนระหว่างเรียนอย่างต่อเนื่อง"] },
+        { title: "3. การใช้สื่อเทคโนโลยี", questions: ["สื่อเทคโนโลยีสอดคล้องกับกิจกรรมการเรียนรู้", "สื่อกระตุ้นความสนใจในการเรียนรู้ของผู้เรียน", "ครูใช้สื่อการสอนเหมาะสม ถูกต้อง คุ้มค่า"] },
+        { title: "4. การจัดบรรยากาศและบริหารชั้นเรียน", questions: ["จัดบรรยากาศที่เอื้อต่อการเรียนรู้ของผู้เรียน", "ครูกระตุ้นผู้เรียนให้เกิดความสนใจในการเรียนรู้ผ่านสื่อเทคโนโลยี", "ครูคอยให้คำแนะนำและแก้ไขปัญหาแก่ผู้เรียน", "ครูใช้เทคนิคหลากหลายในการควบคุมชั้นเรียน"] },
+        { title: "5. การวัดผลและประเมินผล", questions: ["ประเมินศักยภาพผู้เรียนก่อนเรียน", "ประเมินศักยภาพผู้เรียนระหว่างเรียน", "ประเมินศักยภาพผู้เรียนหลังเรียน", "ใช้เทคนิคการประเมินตามสภาพจริง", "ผลการจัดการเรียนรู้ทำให้นักเรียนเกิดการเรียนรู้ด้านทักษะ และคุณลักษณะอันพึงประสงค์"] },
+        { title: "6. ประเมินแผนการจัดการเรียนรู้", questions: ["องค์ประกอบของแผนการจัดการเรียนรู้", "สาระสำคัญ", "มาตรฐานการเรียนรู้และตัวชี้วัด", "จุดประสงค์การเรียนรู้", "สาระการเรียนรู้", "กระบวนการเรียนรู้/กิจกรรมการเรียนรู้", "การวัดและประเมินผลการเรียนรู้", "สื่อการจัดการเรียนรู้หรือแหล่งเรียนรู้"] },
+        { title: "7. การบริหารจัดการชั้นเรียน", questions: ["มีสัญลักษณ์แสดงชาติ ศาสนา พระมหากษัตริย์", "มีป้ายนิเทศให้ความรู้ มุมประสบการณ์ต่างๆ", "มีมุมผลงาน มุมแสดงความก้าวหน้าของนักเรียน", "ห้องเรียน โต๊ะเก้าอี้นักเรียน สะอาด ปลอดภัย", "มีตู้โต๊ะเก็บสื่อการสอนเป็นระเบียบ สะดวกต่อการหยิบใช้", "ตกแต่งห้องเรียนคำนึงถึงความเรียบง่าย เป็นระเบียบ ประหยัด", "มุมเก็บอุปกรณ์ทำความสะอาดเป็นระเบียบเรียบร้อย"] }
     ];
 
     const questionsContainer = document.getElementById('evaluationQuestions');
     let htmlContent = '';
-
     categoriesData.forEach((cat, index) => {
         let catNum = index + 1;
         htmlContent += `
@@ -313,22 +268,13 @@
             htmlContent += `<tr>
                 <td class="question-text"><strong>${catNum}.${qNum}</strong> ${qText}</td>`;
             for (let score = 5; score >= 1; score--) {
-                htmlContent += `<td class="text-center">
-                    <input class="form-check-input score-radio" type="radio" name="q${catNum}_${qNum}" value="${score}" required onchange="calculateScore()">
-                </td>`;
+                htmlContent += `<td class="text-center"><input class="form-check-input score-radio" type="radio" name="q${catNum}_${qNum}" value="${score}" required onchange="calculateScore()"></td>`;
             }
             htmlContent += `</tr>`;
         });
-        htmlContent += `
-                        </tbody>
-                    </table>
-                </div>
-                <div>
-                    <label class="form-label fw-bold">ข้อเสนอแนะหมวด ${catNum}</label>
-                    <textarea class="form-control" id="commentText${catNum}" rows="2" placeholder="พิมพ์ข้อเสนอแนะ..."></textarea>
-                </div>
-            </div>
-        </div>`;
+        htmlContent += `</tbody></table></div>
+                <div><label class="form-label fw-bold">ข้อเสนอแนะหมวด ${catNum}</label><textarea class="form-control" id="commentText${catNum}" rows="2" placeholder="พิมพ์ข้อเสนอแนะ..."></textarea></div>
+            </div></div>`;
     });
     questionsContainer.innerHTML = htmlContent;
 
@@ -340,20 +286,16 @@
             canvas.getContext("2d").scale(ratio, ratio);
         });
     }
-    
     setTimeout(resizeCanvas, 500);
     document.getElementById('form-tab').addEventListener('shown.bs.tab', resizeCanvas);
     document.getElementById('execSignModal').addEventListener('shown.bs.modal', resizeCanvas);
 
     let totalScore = 0; let percentage = 0; let qualityStr = ''; let categoryScores = [0,0,0,0,0,0,0];
-
     function calculateScore() {
         totalScore = 0; categoryScores = [0,0,0,0,0,0,0];
         document.querySelectorAll('.score-radio:checked').forEach(radio => {
-            let val = parseInt(radio.value);
-            totalScore += val;
-            let catIndex = parseInt(radio.name.charAt(1)) - 1;
-            categoryScores[catIndex] += val;
+            let val = parseInt(radio.value); totalScore += val;
+            categoryScores[parseInt(radio.name.charAt(1)) - 1] += val;
         });
         percentage = ((totalScore / 200) * 100).toFixed(2);
         
@@ -370,30 +312,39 @@
 
     function formatDateThai(dateString) {
         if(!dateString || dateString === '-') return '-';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+        return new Date(dateString).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
     }
+
+    let currentSummaryData = []; // เก็บข้อมูลตารางไว้สำหรับแสดงใน Modal
 
     function loadSummary() {
         const tbody = document.getElementById('summaryTableBody');
         tbody.innerHTML = '<tr><td colspan="7" class="text-muted">กำลังโหลดข้อมูล...</td></tr>';
         
         fetch(GAS_URL + "?action=getSummary")
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
             if(data.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="text-muted">ไม่มีข้อมูล</td></tr>'; return; }
             let html = '';
-            data.reverse().forEach(row => {
-                let loadBtn = row.pdfUrl ? `<a href="${row.pdfUrl}" target="_blank" class="btn btn-sm btn-outline-danger">โหลด</a>` : '';
+            currentSummaryData = data.reverse(); 
+            
+            currentSummaryData.forEach(row => {
+                let depBtn = row.deputySigned ? 'btn-success' : 'btn-danger';
+                let dirBtn = row.directorSigned ? 'btn-success' : 'btn-danger';
+                let loadBtn = row.pdfUrl ? `<a href="${row.pdfUrl}" target="_blank" class="btn btn-sm btn-outline-danger mt-1">โหลด</a>` : '';
+                
                 html += `<tr>
                     <td>${row.session}</td>
                     <td>${formatDateThai(row.date)}</td>
                     <td class="text-start">${row.evaluatee}</td>
                     <td class="text-start">${row.evaluator}</td>
                     <td class="text-start">${row.subject}</td>
-                    <td><button class="btn btn-sm btn-primary" onclick="openExecModal(${row.rowIndex})">ลงนาม</button></td>
                     <td>
-                        <button class="btn btn-sm btn-warning mb-1" onclick="generatePDF(${row.rowIndex}, this)">สร้าง</button>
+                        <button class="btn btn-sm ${depBtn} w-100 mb-1" onclick="openExecModal(${row.rowIndex}, 'deputy')">รอง ลงนาม</button>
+                        <button class="btn btn-sm ${dirBtn} w-100" onclick="openExecModal(${row.rowIndex}, 'director')">ผอ. ลงนาม</button>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-warning w-100" onclick="generatePDF(${row.rowIndex}, this)">สร้าง</button>
                         ${loadBtn}
                     </td>
                 </tr>`;
@@ -404,18 +355,16 @@
 
     document.getElementById('evalForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        
-        if (!this.checkValidity()) {
-            this.reportValidity();
-            return;
-        }
+        if (!this.checkValidity()) { this.reportValidity(); return; }
 
         let btn = document.getElementById('submitBtn');
         btn.innerHTML = 'กำลังบันทึกข้อมูล...'; btn.disabled = true;
 
         let formData = {
             evaluateeName: document.getElementById('evaluateeName').value,
+            evaluateePosition: document.getElementById('evaluateePosition').value,
             evaluatorName: document.getElementById('evaluatorName').value,
+            evaluatorPosition: document.getElementById('evaluatorPosition').value,
             supervisionFormat: document.getElementById('supervisionFormat').value,
             subject: document.getElementById('subject').value,
             subjectCode: document.getElementById('subjectCode').value,
@@ -448,32 +397,57 @@
             if(res.status === 'success') {
                 alert('บันทึกข้อมูลสำเร็จ (สามารถไปที่แท็บสรุปผลเพื่อลงนามผู้บริหาร และสร้าง PDF ได้)');
                 document.getElementById('evalForm').reset();
-                padEvaluatee.clear(); padEvaluator.clear();
-                calculateScore();
+                padEvaluatee.clear(); padEvaluator.clear(); calculateScore();
             }
         })
         .finally(() => { btn.innerHTML = 'บันทึกข้อมูล'; btn.disabled = false; });
     });
 
-    // 2. การจัดการ Modal ลงนามผู้บริหาร (แก้บั๊ก)
     let execModal;
-    
-    function openExecModal(rowIndex) {
+    function openExecModal(rowIndex, role) {
         let pwd = prompt("กรุณากรอกรหัสผ่านเพื่อเข้าสู่ระบบลงนามผู้บริหาร:");
-        if (pwd !== 'siri') {
-            alert("รหัสผ่านไม่ถูกต้อง!");
-            return;
-        }
+        if (pwd !== 'siri') { alert("รหัสผ่านไม่ถูกต้อง!"); return; }
         
-        // กำหนดค่า Modal ตอนที่กดปุ่ม เพื่อป้องกันปัญหา Bootstrap โหลดไม่ทัน
-        if(!execModal) {
-            execModal = new bootstrap.Modal(document.getElementById('execSignModal'));
-        }
+        if(!execModal) { execModal = new bootstrap.Modal(document.getElementById('execSignModal')); }
+        
+        // ดึงข้อมูลแถวนี้เพื่อมาแสดงผล
+        let rowData = currentSummaryData.find(r => r.rowIndex === rowIndex);
         
         document.getElementById('modalRowIndex').value = rowIndex;
-        document.getElementById('deputyComment').value = '';
-        document.getElementById('directorComment').value = '';
-        padDeputy.clear(); padDirector.clear();
+        document.getElementById('modalRole').value = role;
+        document.getElementById('execComment').value = '';
+        padExec.clear();
+        
+        // สลับข้อมูลระหว่าง รองผู้อำนวยการ และ ผู้อำนวยการ
+        if (role === 'deputy') {
+            document.getElementById('modalTitle').innerText = 'ส่วนลงนาม - รองผู้อำนวยการสถานศึกษา';
+            document.getElementById('modalCommentLabel').innerText = 'ความเห็นของรองผู้อำนวยการโรงเรียน';
+            document.getElementById('execNameDisplay').innerText = '( นายจักรพงศ์ จันทวงศ์ )';
+            document.getElementById('execPosDisplay').innerText = 'รองผู้อำนวยการโรงเรียนวัดแม่กะ';
+        } else {
+            document.getElementById('modalTitle').innerText = 'ส่วนลงนาม - ผู้อำนวยการสถานศึกษา';
+            document.getElementById('modalCommentLabel').innerText = 'ความเห็นของผู้อำนวยการโรงเรียน';
+            document.getElementById('execNameDisplay').innerText = '( นางสาวศิริยา อินทกาโมทย์ )';
+            document.getElementById('execPosDisplay').innerText = 'ผู้อำนวยการโรงเรียนวัดแม่กะ';
+        }
+
+        // จัดหน้าข้อมูลสรุปที่จะแสดงใน Modal
+        let summaryHtml = `
+            <strong>รูปแบบ:</strong> ${rowData.format} (ครั้งที่ ${rowData.session})<br>
+            <strong>วันที่:</strong> ${formatDateThai(rowData.date)}<br>
+            <strong>วิชา:</strong> ${rowData.subject}<br>
+            <strong>ผู้รับการนิเทศ:</strong> ${rowData.evaluatee} <br>
+            <strong>ผู้นิเทศ:</strong> ${rowData.evaluator} <br>
+            <hr class="my-2">
+            <strong>คะแนนรวม:</strong> <span class="text-danger fw-bold">${rowData.totalScore} / 200</span> 
+            (ระดับ: <span class="text-success fw-bold">${rowData.quality}</span>)<br>
+            <small class="text-muted">
+                ม.1: ${rowData.c1} | ม.2: ${rowData.c2} | ม.3: ${rowData.c3} | ม.4: ${rowData.c4} | 
+                ม.5: ${rowData.c5} | ม.6: ${rowData.c6} | ม.7: ${rowData.c7}
+            </small>
+        `;
+        document.getElementById('modalSummaryInfo').innerHTML = summaryHtml;
+        
         execModal.show();
     }
 
@@ -483,37 +457,30 @@
 
         let payload = {
             rowIndex: document.getElementById('modalRowIndex').value,
-            deputyComment: document.getElementById('deputyComment').value,
-            directorComment: document.getElementById('directorComment').value,
-            signDeputy: padDeputy.isEmpty() ? '' : padDeputy.toDataURL(),
-            signDirector: padDirector.isEmpty() ? '' : padDirector.toDataURL()
+            role: document.getElementById('modalRole').value,
+            comment: document.getElementById('execComment').value,
+            sign: padExec.isEmpty() ? '' : padExec.toDataURL()
         };
 
         fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'saveExecSign', data: payload }) })
         .then(res => res.json())
         .then(res => {
             if(res.status === 'success') {
-                alert('บันทึกการลงนามผู้บริหารสำเร็จ!');
+                alert('บันทึกการลงนามสำเร็จ!');
                 execModal.hide();
+                loadSummary(); // โหลดตารางใหม่เพื่อให้ปุ่มเปลี่ยนเป็นสีเขียว
             }
         })
-        .finally(() => { btn.innerHTML = 'บันทึกการลงนามผู้บริหาร'; btn.disabled = false; });
+        .finally(() => { btn.innerHTML = 'บันทึกการลงนาม'; btn.disabled = false; });
     }
 
-    // 3. ฟังก์ชันสร้าง PDF
     function generatePDF(rowIndex, btnElement) {
-        btnElement.innerHTML = 'กำลังสร้าง...';
-        btnElement.disabled = true;
-
+        btnElement.innerHTML = 'กำลังสร้าง...'; btnElement.disabled = true;
         fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'generatePDF', rowIndex: rowIndex }) })
         .then(res => res.json())
         .then(res => {
-            if(res.status === 'success') {
-                alert('สร้างไฟล์ PDF สำเร็จ!');
-                loadSummary(); 
-            } else {
-                alert('เกิดข้อผิดพลาด: ' + res.message);
-            }
+            if(res.status === 'success') { alert('สร้างไฟล์ PDF สำเร็จ!'); loadSummary(); } 
+            else { alert('เกิดข้อผิดพลาด: ' + res.message); }
         })
         .finally(() => { btnElement.innerHTML = 'สร้าง'; btnElement.disabled = false; });
     }
