@@ -6,8 +6,10 @@
     <title>ระบบนิเทศการสอน โรงเรียนวัดแม่กะ</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
 
     <style>
         body { font-family: 'Sarabun', sans-serif; background-color: #f8f9fa; }
@@ -38,6 +40,9 @@
         <li class="nav-item">
             <button class="nav-link" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary-pane" type="button" onclick="loadSummary()">2. สรุปผลการนิเทศ</button>
         </li>
+        <li class="nav-item">
+            <button class="nav-link" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard-pane" type="button" onclick="loadSummary()">3. สารสนเทศ</button>
+        </li>
     </ul>
 
     <div class="tab-content" id="mainTabContent">
@@ -48,7 +53,7 @@
                     <div class="card-body row g-3">
                         <div class="col-md-3">
                             <label class="form-label">ชื่อผู้รับการนิเทศ</label>
-                            <select class="form-select" id="evaluateeName" required><option value="">-- เลือกชื่อ --</option></select>
+                            <select class="form-select evaluatee-dropdown" id="evaluateeName" required><option value="">-- เลือกชื่อ --</option></select>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">ตำแหน่งผู้รับการนิเทศ</label>
@@ -61,7 +66,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">ชื่อผู้นิเทศ</label>
-                            <select class="form-select" id="evaluatorName" required><option value="">-- เลือกชื่อ --</option></select>
+                            <select class="form-select evaluator-dropdown" id="evaluatorName" required><option value="">-- เลือกชื่อ --</option></select>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">ตำแหน่งผู้นิเทศ</label>
@@ -180,6 +185,54 @@
             </div>
         </div>
 
+        <div class="tab-pane fade" id="dashboard-pane">
+            <div class="card shadow-sm mb-4 border-info">
+                <div class="card-header bg-info text-white fw-bold">ส่วนที่ 1: สารสนเทศการนิเทศรวม</div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label">เลือกครั้งที่:</label>
+                            <select class="form-select border-info" id="dashOverallSession" onchange="updateDashOverall()">
+                                <option value="1/2569">1/2569</option>
+                                <option value="2/2569">2/2569</option>
+                            </select>
+                        </div>
+                    </div>
+                    <h5 class="text-center text-primary mb-3">1. กราฟคะแนนเฉลี่ยรวม 7 หมวด (ร้อยละ)</h5>
+                    <canvas id="chartOverall" style="max-height: 350px;"></canvas>
+                    
+                    <hr class="my-5">
+                    
+                    <h5 class="text-center text-primary mb-4">2. กราฟคะแนนเฉลี่ยแยกตามหมวดหมู่การประเมินรายบุคคล</h5>
+                    <div class="row g-4" id="catChartsContainer">
+                        </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-5 border-success">
+                <div class="card-header bg-success text-white fw-bold">ส่วนที่ 2: สารสนเทศการนิเทศรายบุคคล</div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-5">
+                            <label class="form-label">ชื่อผู้รับการนิเทศ:</label>
+                            <select class="form-select border-success evaluatee-dropdown" id="dashIndivEvaluatee" onchange="updateDashIndiv()">
+                                <option value="">-- เลือกชื่อ --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">เลือกครั้งที่:</label>
+                            <select class="form-select border-success" id="dashIndivSession" onchange="updateDashIndiv()">
+                                <option value="1/2569">1/2569</option>
+                                <option value="2/2569">2/2569</option>
+                            </select>
+                        </div>
+                    </div>
+                    <h5 class="text-center text-success mb-3">กราฟร้อยละของคะแนนเฉลี่ยรายบุคคล 7 หมวด</h5>
+                    <canvas id="chartIndiv" style="max-height: 350px;"></canvas>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -193,7 +246,6 @@
       <div class="modal-body">
         <input type="hidden" id="modalRowIndex">
         <input type="hidden" id="modalRole">
-        
         <div class="alert alert-info text-start shadow-sm mb-4" id="modalSummaryInfo"></div>
         
         <div class="mb-4">
@@ -224,27 +276,24 @@
         "นางสาวนฤมล กระจ่างโฉม", "นางสาวศศิประภา ชมถิ่น", "นางสาวศิริณทิพย์ สุวรรณ์", "นางสาวเยาวพา มาน้อย"
     ];
 
-    const evaluateeSelect = document.getElementById('evaluateeName');
-    const evaluatorSelect = document.getElementById('evaluatorName');
-    staff.forEach(name => {
-        evaluateeSelect.innerHTML += `<option value="${name}">${name}</option>`;
-        evaluatorSelect.innerHTML += `<option value="${name}">${name}</option>`;
+    // สร้างตัวเลือกรายชื่อลง Dropdown ทุกจุดที่เกี่ยวข้อง
+    document.querySelectorAll('.evaluatee-dropdown, .evaluator-dropdown').forEach(select => {
+        staff.forEach(name => select.innerHTML += `<option value="${name}">${name}</option>`);
     });
 
-    // กำหนดสีปากกาเป็นสีน้ำเงินเข้ม (Dark Blue) ทุกกระดาน
-    const penOptions = { penColor: "#00008B" };
+    const penOptions = { penColor: "#00008B" }; // สีน้ำเงินเข้ม
     const padEvaluatee = new SignaturePad(document.getElementById('signEvaluatee'), penOptions);
     const padEvaluator = new SignaturePad(document.getElementById('signEvaluator'), penOptions);
     const padExec = new SignaturePad(document.getElementById('signExec'), penOptions); 
 
     const categoriesData = [
-        { title: "1. การเตรียมความพร้อมก่อนสอน", questions: ["จัดทำแผนการเรียนรู้ที่มีองค์ประกอบถูกต้องและครบถ้วน", "จัดสื่ออุปกรณ์การสอนครบถ้วนสอดคล้องกับกิจกรรมการเรียนการสอน", "จัดทำแบบประเมินผลการเรียนรู้สอดคล้องกับตัวชี้วัด/ผลการเรียนรู้"] },
-        { title: "2. การจัดกิจกรรมการเรียนรู้", questions: ["จัดกิจกรรมสอดคล้องกับตัวชี้วัด/ผลการเรียนรู้", "จัดกิจกรรมตามขั้นตอนที่กำหนดไว้ในแผนการจัดการเรียนรู้", "เปิดโอกาสให้ผู้เรียนมีส่วนร่วมในกิจกรรมอย่างทั่วถึง", "จัดกิจกรรมให้นักเรียนฝึกปฏิบัติจนเกิดทักษะต่างๆ", "ใช้เทคนิคการตั้งคำถาม ให้นักเรียนมีส่วนร่วมแสดงความคิดเห็น", "เลือกใช้เทคนิคการสอนที่ตอบสนองกับความต้องการของนักเรียน", "จัดกิจกรรมส่งเสริมนักเรียนที่เป็นกลุ่มเก่ง", "เลือกใช้กิจกรรมซ่อมเสริมนักเรียนที่เป็นกลุ่มอ่อนเพื่อให้เรียนรู้ทันเพื่อน", "ใช้การเสริมแรงตลอดการจัดกิจกรรมการเรียนรู้", "ตรวจสอบความเข้าใจของนักเรียนระหว่างเรียนอย่างต่อเนื่อง"] },
-        { title: "3. การใช้สื่อเทคโนโลยี", questions: ["สื่อเทคโนโลยีสอดคล้องกับกิจกรรมการเรียนรู้", "สื่อกระตุ้นความสนใจในการเรียนรู้ของผู้เรียน", "ครูใช้สื่อการสอนเหมาะสม ถูกต้อง คุ้มค่า"] },
-        { title: "4. การจัดบรรยากาศและบริหารชั้นเรียน", questions: ["จัดบรรยากาศที่เอื้อต่อการเรียนรู้ของผู้เรียน", "ครูกระตุ้นผู้เรียนให้เกิดความสนใจในการเรียนรู้ผ่านสื่อเทคโนโลยี", "ครูคอยให้คำแนะนำและแก้ไขปัญหาแก่ผู้เรียน", "ครูใช้เทคนิคหลากหลายในการควบคุมชั้นเรียน"] },
-        { title: "5. การวัดผลและประเมินผล", questions: ["ประเมินศักยภาพผู้เรียนก่อนเรียน", "ประเมินศักยภาพผู้เรียนระหว่างเรียน", "ประเมินศักยภาพผู้เรียนหลังเรียน", "ใช้เทคนิคการประเมินตามสภาพจริง", "ผลการจัดการเรียนรู้ทำให้นักเรียนเกิดการเรียนรู้ด้านทักษะ และคุณลักษณะอันพึงประสงค์"] },
-        { title: "6. ประเมินแผนการจัดการเรียนรู้", questions: ["องค์ประกอบของแผนการจัดการเรียนรู้", "สาระสำคัญ", "มาตรฐานการเรียนรู้และตัวชี้วัด", "จุดประสงค์การเรียนรู้", "สาระการเรียนรู้", "กระบวนการเรียนรู้/กิจกรรมการเรียนรู้", "การวัดและประเมินผลการเรียนรู้", "สื่อการจัดการเรียนรู้หรือแหล่งเรียนรู้"] },
-        { title: "7. การบริหารจัดการชั้นเรียน", questions: ["มีสัญลักษณ์แสดงชาติ ศาสนา พระมหากษัตริย์", "มีป้ายนิเทศให้ความรู้ มุมประสบการณ์ต่างๆ", "มีมุมผลงาน มุมแสดงความก้าวหน้าของนักเรียน", "ห้องเรียน โต๊ะเก้าอี้นักเรียน สะอาด ปลอดภัย", "มีตู้โต๊ะเก็บสื่อการสอนเป็นระเบียบ สะดวกต่อการหยิบใช้", "ตกแต่งห้องเรียนคำนึงถึงความเรียบง่าย เป็นระเบียบ ประหยัด", "มุมเก็บอุปกรณ์ทำความสะอาดเป็นระเบียบเรียบร้อย"] }
+        { title: "1. การเตรียมความพร้อมก่อนสอน", maxScore: 15, questions: ["จัดทำแผนการเรียนรู้ที่มีองค์ประกอบถูกต้องและครบถ้วน", "จัดสื่ออุปกรณ์การสอนครบถ้วนสอดคล้องกับกิจกรรมการเรียนการสอน", "จัดทำแบบประเมินผลการเรียนรู้สอดคล้องกับตัวชี้วัด/ผลการเรียนรู้"] },
+        { title: "2. การจัดกิจกรรมการเรียนรู้", maxScore: 50, questions: ["จัดกิจกรรมสอดคล้องกับตัวชี้วัด/ผลการเรียนรู้", "จัดกิจกรรมตามขั้นตอนที่กำหนดไว้ในแผนการจัดการเรียนรู้", "เปิดโอกาสให้ผู้เรียนมีส่วนร่วมในกิจกรรมอย่างทั่วถึง", "จัดกิจกรรมให้นักเรียนฝึกปฏิบัติจนเกิดทักษะต่างๆ", "ใช้เทคนิคการตั้งคำถาม ให้นักเรียนมีส่วนร่วมแสดงความคิดเห็น", "เลือกใช้เทคนิคการสอนที่ตอบสนองกับความต้องการของนักเรียน", "จัดกิจกรรมส่งเสริมนักเรียนที่เป็นกลุ่มเก่ง", "เลือกใช้กิจกรรมซ่อมเสริมนักเรียนที่เป็นกลุ่มอ่อนเพื่อให้เรียนรู้ทันเพื่อน", "ใช้การเสริมแรงตลอดการจัดกิจกรรมการเรียนรู้", "ตรวจสอบความเข้าใจของนักเรียนระหว่างเรียนอย่างต่อเนื่อง"] },
+        { title: "3. การใช้สื่อเทคโนโลยี", maxScore: 15, questions: ["สื่อเทคโนโลยีสอดคล้องกับกิจกรรมการเรียนรู้", "สื่อกระตุ้นความสนใจในการเรียนรู้ของผู้เรียน", "ครูใช้สื่อการสอนเหมาะสม ถูกต้อง คุ้มค่า"] },
+        { title: "4. การจัดบรรยากาศและบริหารชั้นเรียน", maxScore: 20, questions: ["จัดบรรยากาศที่เอื้อต่อการเรียนรู้ของผู้เรียน", "ครูกระตุ้นผู้เรียนให้เกิดความสนใจในการเรียนรู้ผ่านสื่อเทคโนโลยี", "ครูคอยให้คำแนะนำและแก้ไขปัญหาแก่ผู้เรียน", "ครูใช้เทคนิคหลากหลายในการควบคุมชั้นเรียน"] },
+        { title: "5. การวัดผลและประเมินผล", maxScore: 25, questions: ["ประเมินศักยภาพผู้เรียนก่อนเรียน", "ประเมินศักยภาพผู้เรียนระหว่างเรียน", "ประเมินศักยภาพผู้เรียนหลังเรียน", "ใช้เทคนิคการประเมินตามสภาพจริง", "ผลการจัดการเรียนรู้ทำให้นักเรียนเกิดการเรียนรู้ด้านทักษะ และคุณลักษณะอันพึงประสงค์"] },
+        { title: "6. ประเมินแผนการจัดการเรียนรู้", maxScore: 40, questions: ["องค์ประกอบของแผนการจัดการเรียนรู้", "สาระสำคัญ", "มาตรฐานการเรียนรู้และตัวชี้วัด", "จุดประสงค์การเรียนรู้", "สาระการเรียนรู้", "กระบวนการเรียนรู้/กิจกรรมการเรียนรู้", "การวัดและประเมินผลการเรียนรู้", "สื่อการจัดการเรียนรู้หรือแหล่งเรียนรู้"] },
+        { title: "7. การบริหารจัดการชั้นเรียน", maxScore: 35, questions: ["มีสัญลักษณ์แสดงชาติ ศาสนา พระมหากษัตริย์", "มีป้ายนิเทศให้ความรู้ มุมประสบการณ์ต่างๆ", "มีมุมผลงาน มุมแสดงความก้าวหน้าของนักเรียน", "ห้องเรียน โต๊ะเก้าอี้นักเรียน สะอาด ปลอดภัย", "มีตู้โต๊ะเก็บสื่อการสอนเป็นระเบียบ สะดวกต่อการหยิบใช้", "ตกแต่งห้องเรียนคำนึงถึงความเรียบง่าย เป็นระเบียบ ประหยัด", "มุมเก็บอุปกรณ์ทำความสะอาดเป็นระเบียบเรียบร้อย"] }
     ];
 
     const questionsContainer = document.getElementById('evaluationQuestions');
@@ -257,30 +306,22 @@
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-bordered align-middle">
-                        <thead class="table-light">
-                            <tr class="text-center">
-                                <th width="60%">ข้อประเมิน</th>
-                                <th width="8%">5</th><th width="8%">4</th><th width="8%">3</th><th width="8%">2</th><th width="8%">1</th>
-                            </tr>
-                        </thead>
+                        <thead class="table-light"><tr class="text-center"><th width="60%">ข้อประเมิน</th><th width="8%">5</th><th width="8%">4</th><th width="8%">3</th><th width="8%">2</th><th width="8%">1</th></tr></thead>
                         <tbody>`;
         cat.questions.forEach((qText, qIndex) => {
             let qNum = qIndex + 1;
-            htmlContent += `<tr>
-                <td class="question-text"><strong>${catNum}.${qNum}</strong> ${qText}</td>`;
+            htmlContent += `<tr><td class="question-text"><strong>${catNum}.${qNum}</strong> ${qText}</td>`;
             for (let score = 5; score >= 1; score--) {
                 htmlContent += `<td class="text-center"><input class="form-check-input score-radio" type="radio" name="q${catNum}_${qNum}" value="${score}" required onchange="calculateScore()"></td>`;
             }
             htmlContent += `</tr>`;
         });
-        htmlContent += `</tbody></table></div>
-                <div><label class="form-label fw-bold">ข้อเสนอแนะหมวด ${catNum}</label><textarea class="form-control" id="commentText${catNum}" rows="2" placeholder="พิมพ์ข้อเสนอแนะ..."></textarea></div>
-            </div></div>`;
+        htmlContent += `</tbody></table></div><div><label class="form-label fw-bold">ข้อเสนอแนะหมวด ${catNum}</label><textarea class="form-control" id="commentText${catNum}" rows="2" placeholder="พิมพ์ข้อเสนอแนะ..."></textarea></div></div></div>`;
     });
     questionsContainer.innerHTML = htmlContent;
 
     function resizeCanvas() {
-        document.querySelectorAll('canvas').forEach(canvas => {
+        document.querySelectorAll('canvas.signature-pad').forEach(canvas => {
             let ratio =  Math.max(window.devicePixelRatio || 1, 1);
             canvas.width = canvas.offsetWidth * ratio;
             canvas.height = canvas.offsetHeight * ratio;
@@ -299,13 +340,11 @@
             categoryScores[parseInt(radio.name.charAt(1)) - 1] += val;
         });
         percentage = ((totalScore / 200) * 100).toFixed(2);
-        
         if(percentage >= 91) qualityStr = "ดีมาก";
         else if(percentage >= 81) qualityStr = "ดี";
         else if(percentage >= 71) qualityStr = "พอใช้";
         else if(percentage >= 61) qualityStr = "ควรปรับปรุง";
         else qualityStr = "ไม่ผ่าน";
-
         document.getElementById('totalScoreText').innerText = totalScore;
         document.getElementById('percentText').innerText = percentage;
         document.getElementById('qualityText').innerText = qualityStr;
@@ -318,6 +357,105 @@
 
     let currentSummaryData = [];
 
+    // ====== ส่วนระบบกราฟ (Dashboard) ======
+    let charts = {};
+    const catLabelsShort = ["หมวด 1", "หมวด 2", "หมวด 3", "หมวด 4", "หมวด 5", "หมวด 6", "หมวด 7"];
+    
+    // สร้างช่องวางกราฟ 7 หมวด
+    const catContainer = document.getElementById('catChartsContainer');
+    categoriesData.forEach((cat, index) => {
+        catContainer.innerHTML += `
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-secondary">
+                <div class="card-header bg-secondary text-white py-1" style="font-size:0.9rem;">${cat.title}</div>
+                <div class="card-body p-2"><canvas id="chartCat${index+1}"></canvas></div>
+            </div>
+        </div>`;
+    });
+
+    function updateDashOverall() {
+        let session = document.getElementById('dashOverallSession').value;
+        let data = currentSummaryData.filter(r => r.session === session);
+        
+        let avgsPerc = [0,0,0,0,0,0,0];
+        let teacherData = {};
+
+        if(data.length > 0) {
+            let sums = [0,0,0,0,0,0,0];
+            data.forEach(r => {
+                sums[0] += parseFloat(r.c1) || 0; sums[1] += parseFloat(r.c2) || 0; sums[2] += parseFloat(r.c3) || 0;
+                sums[3] += parseFloat(r.c4) || 0; sums[4] += parseFloat(r.c5) || 0; sums[5] += parseFloat(r.c6) || 0;
+                sums[6] += parseFloat(r.c7) || 0;
+                
+                // เก็บข้อมูลรายบุคคลสำหรับกราฟ 7 หมวด
+                if(!teacherData[r.evaluatee]) teacherData[r.evaluatee] = { count: 0, sums: [0,0,0,0,0,0,0] };
+                teacherData[r.evaluatee].count++;
+                teacherData[r.evaluatee].sums[0] += parseFloat(r.c1) || 0;
+                teacherData[r.evaluatee].sums[1] += parseFloat(r.c2) || 0;
+                teacherData[r.evaluatee].sums[2] += parseFloat(r.c3) || 0;
+                teacherData[r.evaluatee].sums[3] += parseFloat(r.c4) || 0;
+                teacherData[r.evaluatee].sums[4] += parseFloat(r.c5) || 0;
+                teacherData[r.evaluatee].sums[5] += parseFloat(r.c6) || 0;
+                teacherData[r.evaluatee].sums[6] += parseFloat(r.c7) || 0;
+            });
+            avgsPerc = sums.map((s, i) => ((s / data.length) / categoriesData[i].maxScore * 100).toFixed(2));
+        }
+
+        // วาดกราฟ 1: กราฟรวม 7 แท่ง
+        if(charts['overall']) charts['overall'].destroy();
+        charts['overall'] = new Chart(document.getElementById('chartOverall'), {
+            type: 'bar',
+            data: {
+                labels: catLabelsShort,
+                datasets: [{ label: 'ร้อยละคะแนนเฉลี่ย', data: avgsPerc, backgroundColor: '#0dcaf0' }]
+            },
+            options: { scales: { y: { beginAtZero: true, max: 100 } } }
+        });
+
+        // วาดกราฟ 2: กราฟแยกหมวด 7 กราฟ
+        let teachers = Object.keys(teacherData);
+        for(let i=0; i<7; i++) {
+            let catScores = teachers.map(t => (teacherData[t].sums[i] / teacherData[t].count).toFixed(2));
+            if(charts[`cat${i+1}`]) charts[`cat${i+1}`].destroy();
+            charts[`cat${i+1}`] = new Chart(document.getElementById(`chartCat${i+1}`), {
+                type: 'bar',
+                data: {
+                    labels: teachers.map(t => t.split(' ')[0]), // ย่อชื่อให้สั้น
+                    datasets: [{ label: `คะแนน (เต็ม ${categoriesData[i].maxScore})`, data: catScores, backgroundColor: '#ffc107' }]
+                },
+                options: { scales: { y: { beginAtZero: true, max: categoriesData[i].maxScore } }, plugins: { legend: { display: false } } }
+            });
+        }
+    }
+
+    function updateDashIndiv() {
+        let session = document.getElementById('dashIndivSession').value;
+        let evaluatee = document.getElementById('dashIndivEvaluatee').value;
+        let data = currentSummaryData.filter(r => r.session === session && r.evaluatee === evaluatee);
+        
+        let avgsPerc = [0,0,0,0,0,0,0];
+        if(data.length > 0) {
+            let sums = [0,0,0,0,0,0,0];
+            data.forEach(r => {
+                sums[0] += parseFloat(r.c1)||0; sums[1] += parseFloat(r.c2)||0; sums[2] += parseFloat(r.c3)||0;
+                sums[3] += parseFloat(r.c4)||0; sums[4] += parseFloat(r.c5)||0; sums[5] += parseFloat(r.c6)||0;
+                sums[6] += parseFloat(r.c7)||0;
+            });
+            avgsPerc = sums.map((s, i) => ((s / data.length) / categoriesData[i].maxScore * 100).toFixed(2));
+        }
+
+        if(charts['indiv']) charts['indiv'].destroy();
+        charts['indiv'] = new Chart(document.getElementById('chartIndiv'), {
+            type: 'bar',
+            data: {
+                labels: catLabelsShort,
+                datasets: [{ label: `ร้อยละคะแนนเฉลี่ย`, data: avgsPerc, backgroundColor: '#198754' }]
+            },
+            options: { scales: { y: { beginAtZero: true, max: 100 } } }
+        });
+    }
+    // ===================================
+
     function loadSummary() {
         const tbody = document.getElementById('summaryTableBody');
         tbody.innerHTML = '<tr><td colspan="7" class="text-muted">กำลังโหลดข้อมูล...</td></tr>';
@@ -325,9 +463,9 @@
         fetch(GAS_URL + "?action=getSummary")
         .then(res => res.json())
         .then(data => {
+            currentSummaryData = data.reverse(); 
             if(data.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="text-muted">ไม่มีข้อมูล</td></tr>'; return; }
             let html = '';
-            currentSummaryData = data.reverse(); 
             
             currentSummaryData.forEach(row => {
                 let depBtn = row.deputySigned ? 'btn-success' : 'btn-danger';
@@ -351,6 +489,10 @@
                 </tr>`;
             });
             tbody.innerHTML = html;
+
+            // อัปเดตกราฟทันทีเมื่อโหลดข้อมูลเสร็จ
+            updateDashOverall();
+            updateDashIndiv();
         });
     }
 
@@ -399,6 +541,7 @@
                 alert('บันทึกข้อมูลสำเร็จ (สามารถไปที่แท็บสรุปผลเพื่อลงนามผู้บริหาร และสร้าง PDF ได้)');
                 document.getElementById('evalForm').reset();
                 padEvaluatee.clear(); padEvaluator.clear(); calculateScore();
+                loadSummary();
             }
         })
         .finally(() => { btn.innerHTML = 'บันทึกข้อมูล'; btn.disabled = false; });
@@ -410,7 +553,6 @@
         if (pwd !== 'siri') { alert("รหัสผ่านไม่ถูกต้อง!"); return; }
         
         if(!execModal) { execModal = new bootstrap.Modal(document.getElementById('execSignModal')); }
-        
         let rowData = currentSummaryData.find(r => r.rowIndex === rowIndex);
         
         document.getElementById('modalRowIndex').value = rowIndex;
@@ -457,7 +599,6 @@
             </div>
         `;
         document.getElementById('modalSummaryInfo').innerHTML = summaryHtml;
-        
         execModal.show();
     }
 
@@ -476,9 +617,7 @@
         .then(res => res.json())
         .then(res => {
             if(res.status === 'success') {
-                alert('บันทึกการลงนามสำเร็จ!');
-                execModal.hide();
-                loadSummary(); 
+                alert('บันทึกการลงนามสำเร็จ!'); execModal.hide(); loadSummary(); 
             }
         })
         .finally(() => { btn.innerHTML = 'บันทึกการลงนาม'; btn.disabled = false; });
@@ -494,6 +633,11 @@
         })
         .finally(() => { btnElement.innerHTML = 'สร้าง'; btnElement.disabled = false; });
     }
+    
+    // ดึงข้อมูลตารางและกราฟขึ้นมาเมื่อเปิดหน้าเว็บครั้งแรก
+    document.addEventListener("DOMContentLoaded", function() {
+        loadSummary();
+    });
 </script>
 
 </body>
