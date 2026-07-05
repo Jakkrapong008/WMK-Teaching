@@ -9,7 +9,9 @@
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 
     <style>
         body { font-family: 'Sarabun', sans-serif; background-color: #f8f9fa; }
@@ -201,6 +203,11 @@
                     <h5 class="text-center text-primary mb-3">1. กราฟคะแนนเฉลี่ยรวม 7 หมวด (ร้อยละ)</h5>
                     <canvas id="chartOverall" style="max-height: 350px;"></canvas>
                     
+                    <div class="alert alert-warning mt-4 text-center fs-5 shadow-sm" id="overallSummaryBox" style="display: none; border-left: 5px solid #FFD100;">
+                        สรุปผลการนิเทศ ตามเกณฑ์ ระดับ <span id="overallQualityText" class="text-danger fw-bold fs-4"></span><br>
+                        <small class="text-muted" style="font-size: 0.8em;">(คะแนนเฉลี่ยภาพรวม <span id="overallAverageText"></span> %)</small>
+                    </div>
+                    
                     <hr class="my-5">
                     
                     <h5 class="text-center text-primary mb-4">2. กราฟคะแนนเฉลี่ยแยกตามหมวดหมู่การประเมินรายบุคคล</h5>
@@ -270,18 +277,20 @@
 <script>
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbzu3PfncWy6D1X-d_cVLGWK_WBl-mteCWr8U-CP4fa5NzbFdNaVlS9eSK7e2EnS-q1H/exec';
 
+    // ลงทะเบียน Plugin สำหรับแสดงตัวเลขบนกราฟ
+    Chart.register(ChartDataLabels);
+
     const staff = [
         "นางสาวศิริยา อินทกาโมทย์", "นายจักรพงศ์ จันทวงศ์", "นางสาวจันทวี ทาเกิด", 
         "นางณพิชญา นิติคุณชัย", "นายณัฐพงษ์ วิริยา", "นายธนะกานต์ ภูมิมาลา", 
         "นางสาวนฤมล กระจ่างโฉม", "นางสาวศศิประภา ชมถิ่น", "นางสาวศิริณทิพย์ สุวรรณ์", "นางสาวเยาวพา มาน้อย"
     ];
 
-    // สร้างตัวเลือกรายชื่อลง Dropdown ทุกจุดที่เกี่ยวข้อง
     document.querySelectorAll('.evaluatee-dropdown, .evaluator-dropdown').forEach(select => {
         staff.forEach(name => select.innerHTML += `<option value="${name}">${name}</option>`);
     });
 
-    const penOptions = { penColor: "#00008B" }; // สีน้ำเงินเข้ม
+    const penOptions = { penColor: "#00008B" }; 
     const padEvaluatee = new SignaturePad(document.getElementById('signEvaluatee'), penOptions);
     const padEvaluator = new SignaturePad(document.getElementById('signEvaluator'), penOptions);
     const padExec = new SignaturePad(document.getElementById('signExec'), penOptions); 
@@ -359,9 +368,9 @@
 
     // ====== ส่วนระบบกราฟ (Dashboard) ======
     let charts = {};
-    const catLabelsShort = ["หมวด 1", "หมวด 2", "หมวด 3", "หมวด 4", "หมวด 5", "หมวด 6", "หมวด 7"];
+    // ดึงชื่อเต็มของหมวดหมู่เพื่อใช้ในแกนกราฟ
+    const catLabelsFull = categoriesData.map(cat => cat.title);
     
-    // สร้างช่องวางกราฟ 7 หมวด
     const catContainer = document.getElementById('catChartsContainer');
     categoriesData.forEach((cat, index) => {
         catContainer.innerHTML += `
@@ -379,15 +388,21 @@
         
         let avgsPerc = [0,0,0,0,0,0,0];
         let teacherData = {};
+        
+        // ตัวแปรสำหรับคำนวณค่าเฉลี่ยกล่องสรุปผล
+        let totalAvgPercent = 0;
 
         if(data.length > 0) {
             let sums = [0,0,0,0,0,0,0];
+            let allScoreSum = 0; // คะแนนดิบรวมทุกคน
+            
             data.forEach(r => {
                 sums[0] += parseFloat(r.c1) || 0; sums[1] += parseFloat(r.c2) || 0; sums[2] += parseFloat(r.c3) || 0;
                 sums[3] += parseFloat(r.c4) || 0; sums[4] += parseFloat(r.c5) || 0; sums[5] += parseFloat(r.c6) || 0;
                 sums[6] += parseFloat(r.c7) || 0;
                 
-                // เก็บข้อมูลรายบุคคลสำหรับกราฟ 7 หมวด
+                allScoreSum += parseFloat(r.totalScore) || 0;
+                
                 if(!teacherData[r.evaluatee]) teacherData[r.evaluatee] = { count: 0, sums: [0,0,0,0,0,0,0] };
                 teacherData[r.evaluatee].count++;
                 teacherData[r.evaluatee].sums[0] += parseFloat(r.c1) || 0;
@@ -399,20 +414,45 @@
                 teacherData[r.evaluatee].sums[6] += parseFloat(r.c7) || 0;
             });
             avgsPerc = sums.map((s, i) => ((s / data.length) / categoriesData[i].maxScore * 100).toFixed(2));
+            
+            // คำนวณร้อยละเฉลี่ยภาพรวมทั้งหมด
+            let avgScorePerPerson = allScoreSum / data.length;
+            totalAvgPercent = (avgScorePerPerson / 200) * 100;
         }
 
-        // วาดกราฟ 1: กราฟรวม 7 แท่ง
+        // แสดงและอัปเดตกล่องสรุปผล
+        let sumBox = document.getElementById('overallSummaryBox');
+        if(data.length > 0) {
+            let overallQualStr = '';
+            if(totalAvgPercent >= 91) overallQualStr = "ดีมาก";
+            else if(totalAvgPercent >= 81) overallQualStr = "ดี";
+            else if(totalAvgPercent >= 71) overallQualStr = "พอใช้";
+            else if(totalAvgPercent >= 61) overallQualStr = "ควรปรับปรุง";
+            else overallQualStr = "ไม่ผ่าน";
+            
+            document.getElementById('overallAverageText').innerText = totalAvgPercent.toFixed(2);
+            document.getElementById('overallQualityText').innerText = overallQualStr;
+            sumBox.style.display = 'block';
+        } else {
+            sumBox.style.display = 'none';
+        }
+
         if(charts['overall']) charts['overall'].destroy();
         charts['overall'] = new Chart(document.getElementById('chartOverall'), {
             type: 'bar',
             data: {
-                labels: catLabelsShort,
+                labels: catLabelsFull,
                 datasets: [{ label: 'ร้อยละคะแนนเฉลี่ย', data: avgsPerc, backgroundColor: '#0dcaf0' }]
             },
-            options: { scales: { y: { beginAtZero: true, max: 100 } } }
+            options: { 
+                layout: { padding: { top: 25 } }, // เว้นที่ด้านบนให้ตัวเลข
+                scales: { y: { beginAtZero: true, max: 100 } },
+                plugins: {
+                    datalabels: { anchor: 'end', align: 'top', color: '#000', font: { weight: 'bold' } }
+                }
+            }
         });
 
-        // วาดกราฟ 2: กราฟแยกหมวด 7 กราฟ
         let teachers = Object.keys(teacherData);
         for(let i=0; i<7; i++) {
             let catScores = teachers.map(t => (teacherData[t].sums[i] / teacherData[t].count).toFixed(2));
@@ -420,10 +460,17 @@
             charts[`cat${i+1}`] = new Chart(document.getElementById(`chartCat${i+1}`), {
                 type: 'bar',
                 data: {
-                    labels: teachers.map(t => t.split(' ')[0]), // ย่อชื่อให้สั้น
+                    labels: teachers.map(t => t.split(' ')[0]),
                     datasets: [{ label: `คะแนน (เต็ม ${categoriesData[i].maxScore})`, data: catScores, backgroundColor: '#ffc107' }]
                 },
-                options: { scales: { y: { beginAtZero: true, max: categoriesData[i].maxScore } }, plugins: { legend: { display: false } } }
+                options: { 
+                    layout: { padding: { top: 25 } },
+                    scales: { y: { beginAtZero: true, max: categoriesData[i].maxScore } }, 
+                    plugins: { 
+                        legend: { display: false },
+                        datalabels: { anchor: 'end', align: 'top', color: '#000', font: { weight: 'bold' } }
+                    } 
+                }
             });
         }
     }
@@ -448,10 +495,16 @@
         charts['indiv'] = new Chart(document.getElementById('chartIndiv'), {
             type: 'bar',
             data: {
-                labels: catLabelsShort,
+                labels: catLabelsFull,
                 datasets: [{ label: `ร้อยละคะแนนเฉลี่ย`, data: avgsPerc, backgroundColor: '#198754' }]
             },
-            options: { scales: { y: { beginAtZero: true, max: 100 } } }
+            options: { 
+                layout: { padding: { top: 25 } },
+                scales: { y: { beginAtZero: true, max: 100 } },
+                plugins: {
+                    datalabels: { anchor: 'end', align: 'top', color: '#000', font: { weight: 'bold' } }
+                }
+            }
         });
     }
     // ===================================
@@ -490,7 +543,6 @@
             });
             tbody.innerHTML = html;
 
-            // อัปเดตกราฟทันทีเมื่อโหลดข้อมูลเสร็จ
             updateDashOverall();
             updateDashIndiv();
         });
@@ -634,7 +686,6 @@
         .finally(() => { btnElement.innerHTML = 'สร้าง'; btnElement.disabled = false; });
     }
     
-    // ดึงข้อมูลตารางและกราฟขึ้นมาเมื่อเปิดหน้าเว็บครั้งแรก
     document.addEventListener("DOMContentLoaded", function() {
         loadSummary();
     });
