@@ -41,7 +41,6 @@
     </ul>
 
     <div class="tab-content" id="mainTabContent">
-        <!-- แท็บ 1: ฟอร์มบันทึก -->
         <div class="tab-pane fade show active" id="form-pane">
             <form id="evalForm">
                 <div class="card shadow-sm mb-4">
@@ -155,7 +154,6 @@
             </form>
         </div>
 
-        <!-- แท็บ 2: สรุปผลการนิเทศ -->
         <div class="tab-pane fade" id="summary-pane">
             <div class="card shadow-sm mb-5">
                 <div class="card-header bg-dark text-white">ตารางสรุปผลการนิเทศย้อนหลัง</div>
@@ -185,7 +183,6 @@
     </div>
 </div>
 
-<!-- Modal สำหรับผู้บริหารลงนาม (ไดนามิก) -->
 <div class="modal fade" id="execSignModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -197,10 +194,7 @@
         <input type="hidden" id="modalRowIndex">
         <input type="hidden" id="modalRole">
         
-        <!-- ส่วนแสดงข้อมูลสรุป -->
-        <div class="alert alert-info text-start shadow-sm mb-4" id="modalSummaryInfo">
-            <!-- สร้างข้อมูลด้วย JS -->
-        </div>
+        <div class="alert alert-info text-start shadow-sm mb-4" id="modalSummaryInfo"></div>
         
         <div class="mb-4">
             <label class="form-label fw-bold text-primary" id="modalCommentLabel">ความเห็นของผู้บริหาร</label>
@@ -237,9 +231,11 @@
         evaluatorSelect.innerHTML += `<option value="${name}">${name}</option>`;
     });
 
-    const padEvaluatee = new SignaturePad(document.getElementById('signEvaluatee'));
-    const padEvaluator = new SignaturePad(document.getElementById('signEvaluator'));
-    const padExec = new SignaturePad(document.getElementById('signExec')); 
+    // กำหนดสีปากกาเป็นสีน้ำเงินเข้ม (Dark Blue) ทุกกระดาน
+    const penOptions = { penColor: "#00008B" };
+    const padEvaluatee = new SignaturePad(document.getElementById('signEvaluatee'), penOptions);
+    const padEvaluator = new SignaturePad(document.getElementById('signEvaluator'), penOptions);
+    const padExec = new SignaturePad(document.getElementById('signExec'), penOptions); 
 
     const categoriesData = [
         { title: "1. การเตรียมความพร้อมก่อนสอน", questions: ["จัดทำแผนการเรียนรู้ที่มีองค์ประกอบถูกต้องและครบถ้วน", "จัดสื่ออุปกรณ์การสอนครบถ้วนสอดคล้องกับกิจกรรมการเรียนการสอน", "จัดทำแบบประเมินผลการเรียนรู้สอดคล้องกับตัวชี้วัด/ผลการเรียนรู้"] },
@@ -434,7 +430,6 @@
             document.getElementById('execPosDisplay').innerText = 'ผู้อำนวยการโรงเรียนวัดแม่กะ';
         }
 
-        // --- ส่วนที่แก้ไข: ปรับรูปแบบการแสดงผลคะแนนรายหมวดให้แสดงชื่อเต็มและคะแนนเต็ม ---
         let summaryHtml = `
             <div class="row">
                 <div class="col-md-6">
