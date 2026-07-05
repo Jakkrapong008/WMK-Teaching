@@ -9,7 +9,6 @@
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 
@@ -277,7 +276,6 @@
 <script>
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbzu3PfncWy6D1X-d_cVLGWK_WBl-mteCWr8U-CP4fa5NzbFdNaVlS9eSK7e2EnS-q1H/exec';
 
-    // ลงทะเบียน Plugin สำหรับแสดงตัวเลขบนกราฟ
     Chart.register(ChartDataLabels);
 
     const staff = [
@@ -366,9 +364,21 @@
 
     let currentSummaryData = [];
 
-    // ====== ส่วนระบบกราฟ (Dashboard) ======
+    // ====== ชุดสีสดใสสำหรับกราฟ (Color Palette) ======
+    const vibrantColors = [
+        'rgba(255, 99, 132, 0.85)',   // ชมพูอมแดง
+        'rgba(54, 162, 235, 0.85)',   // ฟ้า
+        'rgba(255, 206, 86, 0.85)',   // เหลือง
+        'rgba(75, 192, 192, 0.85)',   // เขียวมินต์
+        'rgba(153, 102, 255, 0.85)',  // ม่วง
+        'rgba(255, 159, 64, 0.85)',   // ส้ม
+        'rgba(0, 209, 178, 0.85)',    // เขียวเทอร์ควอยส์
+        'rgba(255, 56, 96, 0.85)',    // แดงสด
+        'rgba(132, 255, 99, 0.85)',   // เขียวอ่อน
+        'rgba(235, 54, 162, 0.85)'    // บานเย็น
+    ];
+
     let charts = {};
-    // ดึงชื่อเต็มของหมวดหมู่เพื่อใช้ในแกนกราฟ
     const catLabelsFull = categoriesData.map(cat => cat.title);
     
     const catContainer = document.getElementById('catChartsContainer');
@@ -388,13 +398,11 @@
         
         let avgsPerc = [0,0,0,0,0,0,0];
         let teacherData = {};
-        
-        // ตัวแปรสำหรับคำนวณค่าเฉลี่ยกล่องสรุปผล
         let totalAvgPercent = 0;
 
         if(data.length > 0) {
             let sums = [0,0,0,0,0,0,0];
-            let allScoreSum = 0; // คะแนนดิบรวมทุกคน
+            let allScoreSum = 0; 
             
             data.forEach(r => {
                 sums[0] += parseFloat(r.c1) || 0; sums[1] += parseFloat(r.c2) || 0; sums[2] += parseFloat(r.c3) || 0;
@@ -415,12 +423,10 @@
             });
             avgsPerc = sums.map((s, i) => ((s / data.length) / categoriesData[i].maxScore * 100).toFixed(2));
             
-            // คำนวณร้อยละเฉลี่ยภาพรวมทั้งหมด
             let avgScorePerPerson = allScoreSum / data.length;
             totalAvgPercent = (avgScorePerPerson / 200) * 100;
         }
 
-        // แสดงและอัปเดตกล่องสรุปผล
         let sumBox = document.getElementById('overallSummaryBox');
         if(data.length > 0) {
             let overallQualStr = '';
@@ -442,12 +448,19 @@
             type: 'bar',
             data: {
                 labels: catLabelsFull,
-                datasets: [{ label: 'ร้อยละคะแนนเฉลี่ย', data: avgsPerc, backgroundColor: '#0dcaf0' }]
+                datasets: [{ 
+                    label: 'ร้อยละคะแนนเฉลี่ย', 
+                    data: avgsPerc, 
+                    backgroundColor: vibrantColors, // ดึงชุดสีมาใช้
+                    borderColor: '#fff',
+                    borderWidth: 1
+                }]
             },
             options: { 
-                layout: { padding: { top: 25 } }, // เว้นที่ด้านบนให้ตัวเลข
+                layout: { padding: { top: 25 } },
                 scales: { y: { beginAtZero: true, max: 100 } },
                 plugins: {
+                    legend: { display: false },
                     datalabels: { anchor: 'end', align: 'top', color: '#000', font: { weight: 'bold' } }
                 }
             }
@@ -461,7 +474,13 @@
                 type: 'bar',
                 data: {
                     labels: teachers.map(t => t.split(' ')[0]),
-                    datasets: [{ label: `คะแนน (เต็ม ${categoriesData[i].maxScore})`, data: catScores, backgroundColor: '#ffc107' }]
+                    datasets: [{ 
+                        label: `คะแนน (เต็ม ${categoriesData[i].maxScore})`, 
+                        data: catScores, 
+                        backgroundColor: vibrantColors, // ดึงชุดสีมาใช้
+                        borderColor: '#fff',
+                        borderWidth: 1
+                    }]
                 },
                 options: { 
                     layout: { padding: { top: 25 } },
@@ -496,18 +515,24 @@
             type: 'bar',
             data: {
                 labels: catLabelsFull,
-                datasets: [{ label: `ร้อยละคะแนนเฉลี่ย`, data: avgsPerc, backgroundColor: '#198754' }]
+                datasets: [{ 
+                    label: `ร้อยละคะแนนเฉลี่ย`, 
+                    data: avgsPerc, 
+                    backgroundColor: vibrantColors, // ดึงชุดสีมาใช้
+                    borderColor: '#fff',
+                    borderWidth: 1
+                }]
             },
             options: { 
                 layout: { padding: { top: 25 } },
                 scales: { y: { beginAtZero: true, max: 100 } },
                 plugins: {
+                    legend: { display: false },
                     datalabels: { anchor: 'end', align: 'top', color: '#000', font: { weight: 'bold' } }
                 }
             }
         });
     }
-    // ===================================
 
     function loadSummary() {
         const tbody = document.getElementById('summaryTableBody');
