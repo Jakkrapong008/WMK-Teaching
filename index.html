@@ -41,6 +41,7 @@
     </ul>
 
     <div class="tab-content" id="mainTabContent">
+        <!-- แท็บ 1: ฟอร์มบันทึก -->
         <div class="tab-pane fade show active" id="form-pane">
             <form id="evalForm">
                 <div class="card shadow-sm mb-4">
@@ -154,6 +155,7 @@
             </form>
         </div>
 
+        <!-- แท็บ 2: สรุปผลการนิเทศ -->
         <div class="tab-pane fade" id="summary-pane">
             <div class="card shadow-sm mb-5">
                 <div class="card-header bg-dark text-white">ตารางสรุปผลการนิเทศย้อนหลัง</div>
@@ -183,6 +185,7 @@
     </div>
 </div>
 
+<!-- Modal สำหรับผู้บริหารลงนาม (ไดนามิก) -->
 <div class="modal fade" id="execSignModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -194,8 +197,10 @@
         <input type="hidden" id="modalRowIndex">
         <input type="hidden" id="modalRole">
         
+        <!-- ส่วนแสดงข้อมูลสรุป -->
         <div class="alert alert-info text-start shadow-sm mb-4" id="modalSummaryInfo">
-            </div>
+            <!-- สร้างข้อมูลด้วย JS -->
+        </div>
         
         <div class="mb-4">
             <label class="form-label fw-bold text-primary" id="modalCommentLabel">ความเห็นของผู้บริหาร</label>
@@ -234,7 +239,7 @@
 
     const padEvaluatee = new SignaturePad(document.getElementById('signEvaluatee'));
     const padEvaluator = new SignaturePad(document.getElementById('signEvaluator'));
-    const padExec = new SignaturePad(document.getElementById('signExec')); // ใช้กระดานเดียวใน Modal
+    const padExec = new SignaturePad(document.getElementById('signExec')); 
 
     const categoriesData = [
         { title: "1. การเตรียมความพร้อมก่อนสอน", questions: ["จัดทำแผนการเรียนรู้ที่มีองค์ประกอบถูกต้องและครบถ้วน", "จัดสื่ออุปกรณ์การสอนครบถ้วนสอดคล้องกับกิจกรรมการเรียนการสอน", "จัดทำแบบประเมินผลการเรียนรู้สอดคล้องกับตัวชี้วัด/ผลการเรียนรู้"] },
@@ -315,7 +320,7 @@
         return new Date(dateString).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
     }
 
-    let currentSummaryData = []; // เก็บข้อมูลตารางไว้สำหรับแสดงใน Modal
+    let currentSummaryData = [];
 
     function loadSummary() {
         const tbody = document.getElementById('summaryTableBody');
@@ -410,7 +415,6 @@
         
         if(!execModal) { execModal = new bootstrap.Modal(document.getElementById('execSignModal')); }
         
-        // ดึงข้อมูลแถวนี้เพื่อมาแสดงผล
         let rowData = currentSummaryData.find(r => r.rowIndex === rowIndex);
         
         document.getElementById('modalRowIndex').value = rowIndex;
@@ -418,7 +422,6 @@
         document.getElementById('execComment').value = '';
         padExec.clear();
         
-        // สลับข้อมูลระหว่าง รองผู้อำนวยการ และ ผู้อำนวยการ
         if (role === 'deputy') {
             document.getElementById('modalTitle').innerText = 'ส่วนลงนาม - รองผู้อำนวยการสถานศึกษา';
             document.getElementById('modalCommentLabel').innerText = 'ความเห็นของรองผู้อำนวยการโรงเรียน';
@@ -431,20 +434,32 @@
             document.getElementById('execPosDisplay').innerText = 'ผู้อำนวยการโรงเรียนวัดแม่กะ';
         }
 
-        // จัดหน้าข้อมูลสรุปที่จะแสดงใน Modal
+        // --- ส่วนที่แก้ไข: ปรับรูปแบบการแสดงผลคะแนนรายหมวดให้แสดงชื่อเต็มและคะแนนเต็ม ---
         let summaryHtml = `
-            <strong>รูปแบบ:</strong> ${rowData.format} (ครั้งที่ ${rowData.session})<br>
-            <strong>วันที่:</strong> ${formatDateThai(rowData.date)}<br>
-            <strong>วิชา:</strong> ${rowData.subject}<br>
-            <strong>ผู้รับการนิเทศ:</strong> ${rowData.evaluatee} <br>
-            <strong>ผู้นิเทศ:</strong> ${rowData.evaluator} <br>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>รูปแบบ:</strong> ${rowData.format} (ครั้งที่ ${rowData.session})<br>
+                    <strong>วันที่:</strong> ${formatDateThai(rowData.date)}<br>
+                    <strong>วิชา:</strong> ${rowData.subject}<br>
+                    <strong>ผู้รับการนิเทศ:</strong> ${rowData.evaluatee} <br>
+                    <strong>ผู้นิเทศ:</strong> ${rowData.evaluator} <br>
+                </div>
+                <div class="col-md-6 border-start">
+                    <strong>คะแนนรวม:</strong> <span class="text-danger fw-bold fs-5">${rowData.totalScore} / 200</span> 
+                    (ระดับ: <span class="text-success fw-bold">${rowData.quality}</span>)<br>
+                </div>
+            </div>
             <hr class="my-2">
-            <strong>คะแนนรวม:</strong> <span class="text-danger fw-bold">${rowData.totalScore} / 200</span> 
-            (ระดับ: <span class="text-success fw-bold">${rowData.quality}</span>)<br>
-            <small class="text-muted">
-                ม.1: ${rowData.c1} | ม.2: ${rowData.c2} | ม.3: ${rowData.c3} | ม.4: ${rowData.c4} | 
-                ม.5: ${rowData.c5} | ม.6: ${rowData.c6} | ม.7: ${rowData.c7}
-            </small>
+            <div class="mt-2" style="font-size: 0.9em; line-height: 1.6;">
+                <strong>สรุปคะแนนรายหมวด:</strong><br>
+                &bull; หมวดที่ 1 การเตรียมความพร้อมก่อนสอน ได้ <span class="text-primary fw-bold">${rowData.c1}</span> คะแนน จากคะแนนเต็ม 15 คะแนน<br>
+                &bull; หมวดที่ 2 การจัดกิจกรรมการเรียนรู้ ได้ <span class="text-primary fw-bold">${rowData.c2}</span> คะแนน จากคะแนนเต็ม 50 คะแนน<br>
+                &bull; หมวดที่ 3 การใช้สื่อเทคโนโลยี ได้ <span class="text-primary fw-bold">${rowData.c3}</span> คะแนน จากคะแนนเต็ม 15 คะแนน<br>
+                &bull; หมวดที่ 4 การจัดบรรยากาศและบริหารชั้นเรียน ได้ <span class="text-primary fw-bold">${rowData.c4}</span> คะแนน จากคะแนนเต็ม 20 คะแนน<br>
+                &bull; หมวดที่ 5 การวัดผลและประเมินผล ได้ <span class="text-primary fw-bold">${rowData.c5}</span> คะแนน จากคะแนนเต็ม 25 คะแนน<br>
+                &bull; หมวดที่ 6 ประเมินแผนการจัดการเรียนรู้ ได้ <span class="text-primary fw-bold">${rowData.c6}</span> คะแนน จากคะแนนเต็ม 40 คะแนน<br>
+                &bull; หมวดที่ 7 การบริหารจัดการชั้นเรียน ได้ <span class="text-primary fw-bold">${rowData.c7}</span> คะแนน จากคะแนนเต็ม 35 คะแนน
+            </div>
         `;
         document.getElementById('modalSummaryInfo').innerHTML = summaryHtml;
         
@@ -468,7 +483,7 @@
             if(res.status === 'success') {
                 alert('บันทึกการลงนามสำเร็จ!');
                 execModal.hide();
-                loadSummary(); // โหลดตารางใหม่เพื่อให้ปุ่มเปลี่ยนเป็นสีเขียว
+                loadSummary(); 
             }
         })
         .finally(() => { btn.innerHTML = 'บันทึกการลงนาม'; btn.disabled = false; });
