@@ -19,11 +19,13 @@
         .card-header { background-color: #C8102E; color: white; font-weight: 600; }
         .btn-primary { background-color: #C8102E; border-color: #C8102E; }
         .btn-primary:hover { background-color: #a00d24; }
+        .btn-info { color: white; }
         .nav-tabs .nav-link { color: #C8102E; font-weight: 500; }
         .nav-tabs .nav-link.active { color: white; background-color: #C8102E; border-color: #C8102E; }
         .signature-pad { border: 2px dashed #ccc; border-radius: 5px; width: 100%; height: 150px; background-color: white; }
         .table-responsive { margin-bottom: 20px; }
         .question-text { text-align: left; font-size: 15px; }
+        .comments-list li { margin-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -114,7 +116,15 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">เวลา</label>
-                            <input type="text" class="form-control" id="time" placeholder="เช่น 09.00 - 10.00 น." required>
+                            <select class="form-select" id="time" required>
+                                <option value="">-- เลือกเวลา --</option>
+                                <option value="8.30 - 9.30 น.">8.30 - 9.30 น.</option>
+                                <option value="9.30 - 10.30 น.">9.30 - 10.30 น.</option>
+                                <option value="10.30 - 11.30 น.">10.30 - 11.30 น.</option>
+                                <option value="12.30 - 13.30 น.">12.30 - 13.30 น.</option>
+                                <option value="13.30 - 14.30 น.">13.30 - 14.30 น.</option>
+                                <option value="14.30 - 15.30 น.">14.30 - 15.30 น.</option>
+                            </select>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">ครั้งที่</label>
@@ -173,12 +183,13 @@
                                     <th>ชื่อผู้รับการนิเทศ</th>
                                     <th>ผู้นิเทศ</th>
                                     <th>รายวิชา</th>
+                                    <th width="10%">แก้ไข</th>
                                     <th width="15%">ผู้บริหารลงนาม</th>
                                     <th width="15%">ไฟล์ PDF</th>
                                 </tr>
                             </thead>
                             <tbody id="summaryTableBody">
-                                <tr><td colspan="7" class="text-muted">กำลังโหลดข้อมูล...</td></tr>
+                                <tr><td colspan="8" class="text-muted">กำลังโหลดข้อมูล...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -206,12 +217,10 @@
                         สรุปผลการนิเทศ ตามเกณฑ์ ระดับ <span id="overallQualityText" class="text-danger fw-bold fs-4"></span><br>
                         <small class="text-muted" style="font-size: 0.8em;">(คะแนนเฉลี่ยภาพรวม <span id="overallAverageText"></span> %)</small>
                     </div>
-                    
                     <hr class="my-5">
                     
                     <h5 class="text-center text-primary mb-4">2. กราฟคะแนนเฉลี่ยแยกตามหมวดหมู่การประเมินรายบุคคล</h5>
-                    <div class="row g-4" id="catChartsContainer">
-                        </div>
+                    <div class="row g-4" id="catChartsContainer"></div>
                 </div>
             </div>
 
@@ -235,6 +244,11 @@
                     </div>
                     <h5 class="text-center text-success mb-3">กราฟร้อยละของคะแนนเฉลี่ยรายบุคคล 7 หมวด</h5>
                     <canvas id="chartIndiv" style="max-height: 350px;"></canvas>
+                    
+                    <div class="alert alert-success mt-4 text-center fs-5 shadow-sm" id="indivSummaryBox" style="display: none; border-left: 5px solid #198754;">
+                        สรุปผลการนิเทศ ตามเกณฑ์ ระดับ <span id="indivQualityText" class="text-danger fw-bold fs-4"></span><br>
+                        <small class="text-muted" style="font-size: 0.8em;">(คะแนนเฉลี่ยภาพรวม <span id="indivAverageText"></span> %)</small>
+                    </div>
                 </div>
             </div>
         </div>
@@ -361,22 +375,24 @@
         if(!dateString || dateString === '-') return '-';
         return new Date(dateString).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
     }
+    
+    function parseDateToInputFormat(dateStr) {
+        if(!dateStr) return '';
+        try {
+            let d = new Date(dateStr);
+            if(isNaN(d.getTime())) {
+                let parts = dateStr.split('/');
+                if(parts.length === 3) d = new Date(parts[2], parts[1]-1, parts[0]);
+            }
+            if(isNaN(d.getTime())) return '';
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        } catch(e) { return ''; }
+    }
 
     let currentSummaryData = [];
+    let editModeRowIndex = null; // ตัวแปรสำหรับจำว่ากำลังแก้ไขแถวไหน
 
-    // ====== ชุดสีสดใสสำหรับกราฟ (Color Palette) ======
-    const vibrantColors = [
-        'rgba(255, 99, 132, 0.85)',   // ชมพูอมแดง
-        'rgba(54, 162, 235, 0.85)',   // ฟ้า
-        'rgba(255, 206, 86, 0.85)',   // เหลือง
-        'rgba(75, 192, 192, 0.85)',   // เขียวมินต์
-        'rgba(153, 102, 255, 0.85)',  // ม่วง
-        'rgba(255, 159, 64, 0.85)',   // ส้ม
-        'rgba(0, 209, 178, 0.85)',    // เขียวเทอร์ควอยส์
-        'rgba(255, 56, 96, 0.85)',    // แดงสด
-        'rgba(132, 255, 99, 0.85)',   // เขียวอ่อน
-        'rgba(235, 54, 162, 0.85)'    // บานเย็น
-    ];
+    const vibrantColors = ['rgba(255, 99, 132, 0.85)', 'rgba(54, 162, 235, 0.85)', 'rgba(255, 206, 86, 0.85)', 'rgba(75, 192, 192, 0.85)', 'rgba(153, 102, 255, 0.85)', 'rgba(255, 159, 64, 0.85)', 'rgba(0, 209, 178, 0.85)', 'rgba(255, 56, 96, 0.85)', 'rgba(132, 255, 99, 0.85)', 'rgba(235, 54, 162, 0.85)'];
 
     let charts = {};
     const catLabelsFull = categoriesData.map(cat => cat.title);
@@ -394,8 +410,7 @@
 
     function updateDashOverall() {
         let session = document.getElementById('dashOverallSession').value;
-        let data = currentSummaryData.filter(r => r.session === session);
-        
+        let data = currentSummaryData.filter(r => r['ครั้งที่'] === session);
         let avgsPerc = [0,0,0,0,0,0,0];
         let teacherData = {};
         let totalAvgPercent = 0;
@@ -403,67 +418,40 @@
         if(data.length > 0) {
             let sums = [0,0,0,0,0,0,0];
             let allScoreSum = 0; 
-            
             data.forEach(r => {
-                sums[0] += parseFloat(r.c1) || 0; sums[1] += parseFloat(r.c2) || 0; sums[2] += parseFloat(r.c3) || 0;
-                sums[3] += parseFloat(r.c4) || 0; sums[4] += parseFloat(r.c5) || 0; sums[5] += parseFloat(r.c6) || 0;
-                sums[6] += parseFloat(r.c7) || 0;
+                sums[0] += parseFloat(r['รวมคะแนนหมวด 1']) || 0; sums[1] += parseFloat(r['รวมคะแนนหมวด 2']) || 0; sums[2] += parseFloat(r['รวมคะแนนหมวด 3']) || 0;
+                sums[3] += parseFloat(r['รวมคะแนนหมวด 4']) || 0; sums[4] += parseFloat(r['รวมคะแนนหมวด 5']) || 0; sums[5] += parseFloat(r['รวมคะแนนหมวด 6']) || 0;
+                sums[6] += parseFloat(r['รวมคะแนนหมวด 7']) || 0;
                 
-                allScoreSum += parseFloat(r.totalScore) || 0;
-                
-                if(!teacherData[r.evaluatee]) teacherData[r.evaluatee] = { count: 0, sums: [0,0,0,0,0,0,0] };
-                teacherData[r.evaluatee].count++;
-                teacherData[r.evaluatee].sums[0] += parseFloat(r.c1) || 0;
-                teacherData[r.evaluatee].sums[1] += parseFloat(r.c2) || 0;
-                teacherData[r.evaluatee].sums[2] += parseFloat(r.c3) || 0;
-                teacherData[r.evaluatee].sums[3] += parseFloat(r.c4) || 0;
-                teacherData[r.evaluatee].sums[4] += parseFloat(r.c5) || 0;
-                teacherData[r.evaluatee].sums[5] += parseFloat(r.c6) || 0;
-                teacherData[r.evaluatee].sums[6] += parseFloat(r.c7) || 0;
+                allScoreSum += parseFloat(r['รวมคะแนนทั้งหมด']) || 0;
+                let evalName = r['ชื่อผู้รับการนิเทศ'];
+                if(!teacherData[evalName]) teacherData[evalName] = { count: 0, sums: [0,0,0,0,0,0,0] };
+                teacherData[evalName].count++;
+                teacherData[evalName].sums[0] += parseFloat(r['รวมคะแนนหมวด 1']) || 0;
+                teacherData[evalName].sums[1] += parseFloat(r['รวมคะแนนหมวด 2']) || 0;
+                teacherData[evalName].sums[2] += parseFloat(r['รวมคะแนนหมวด 3']) || 0;
+                teacherData[evalName].sums[3] += parseFloat(r['รวมคะแนนหมวด 4']) || 0;
+                teacherData[evalName].sums[4] += parseFloat(r['รวมคะแนนหมวด 5']) || 0;
+                teacherData[evalName].sums[5] += parseFloat(r['รวมคะแนนหมวด 6']) || 0;
+                teacherData[evalName].sums[6] += parseFloat(r['รวมคะแนนหมวด 7']) || 0;
             });
             avgsPerc = sums.map((s, i) => ((s / data.length) / categoriesData[i].maxScore * 100).toFixed(2));
-            
-            let avgScorePerPerson = allScoreSum / data.length;
-            totalAvgPercent = (avgScorePerPerson / 200) * 100;
+            totalAvgPercent = ((allScoreSum / data.length) / 200) * 100;
         }
 
         let sumBox = document.getElementById('overallSummaryBox');
         if(data.length > 0) {
-            let overallQualStr = '';
-            if(totalAvgPercent >= 91) overallQualStr = "ดีมาก";
-            else if(totalAvgPercent >= 81) overallQualStr = "ดี";
-            else if(totalAvgPercent >= 71) overallQualStr = "พอใช้";
-            else if(totalAvgPercent >= 61) overallQualStr = "ควรปรับปรุง";
-            else overallQualStr = "ไม่ผ่าน";
-            
+            let overallQualStr = totalAvgPercent >= 91 ? "ดีมาก" : totalAvgPercent >= 81 ? "ดี" : totalAvgPercent >= 71 ? "พอใช้" : totalAvgPercent >= 61 ? "ควรปรับปรุง" : "ไม่ผ่าน";
             document.getElementById('overallAverageText').innerText = totalAvgPercent.toFixed(2);
             document.getElementById('overallQualityText').innerText = overallQualStr;
             sumBox.style.display = 'block';
-        } else {
-            sumBox.style.display = 'none';
-        }
+        } else { sumBox.style.display = 'none'; }
 
         if(charts['overall']) charts['overall'].destroy();
         charts['overall'] = new Chart(document.getElementById('chartOverall'), {
             type: 'bar',
-            data: {
-                labels: catLabelsFull,
-                datasets: [{ 
-                    label: 'ร้อยละคะแนนเฉลี่ย', 
-                    data: avgsPerc, 
-                    backgroundColor: vibrantColors, // ดึงชุดสีมาใช้
-                    borderColor: '#fff',
-                    borderWidth: 1
-                }]
-            },
-            options: { 
-                layout: { padding: { top: 25 } },
-                scales: { y: { beginAtZero: true, max: 100 } },
-                plugins: {
-                    legend: { display: false },
-                    datalabels: { anchor: 'end', align: 'top', color: '#000', font: { weight: 'bold' } }
-                }
-            }
+            data: { labels: catLabelsFull, datasets: [{ label: 'ร้อยละคะแนนเฉลี่ย', data: avgsPerc, backgroundColor: vibrantColors, borderColor: '#fff', borderWidth: 1 }] },
+            options: { layout: { padding: { top: 25 } }, scales: { y: { beginAtZero: true, max: 100 } }, plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', color: '#000', font: { weight: 'bold' } } } }
         });
 
         let teachers = Object.keys(teacherData);
@@ -472,24 +460,8 @@
             if(charts[`cat${i+1}`]) charts[`cat${i+1}`].destroy();
             charts[`cat${i+1}`] = new Chart(document.getElementById(`chartCat${i+1}`), {
                 type: 'bar',
-                data: {
-                    labels: teachers.map(t => t.split(' ')[0]),
-                    datasets: [{ 
-                        label: `คะแนน (เต็ม ${categoriesData[i].maxScore})`, 
-                        data: catScores, 
-                        backgroundColor: vibrantColors, // ดึงชุดสีมาใช้
-                        borderColor: '#fff',
-                        borderWidth: 1
-                    }]
-                },
-                options: { 
-                    layout: { padding: { top: 25 } },
-                    scales: { y: { beginAtZero: true, max: categoriesData[i].maxScore } }, 
-                    plugins: { 
-                        legend: { display: false },
-                        datalabels: { anchor: 'end', align: 'top', color: '#000', font: { weight: 'bold' } }
-                    } 
-                }
+                data: { labels: teachers.map(t => t.split(' ')[0]), datasets: [{ label: `คะแนน`, data: catScores, backgroundColor: vibrantColors, borderColor: '#fff', borderWidth: 1 }] },
+                options: { layout: { padding: { top: 25 } }, scales: { y: { beginAtZero: true, max: categoriesData[i].maxScore } }, plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', color: '#000', font: { weight: 'bold' } } } }
             });
         }
     }
@@ -497,65 +469,63 @@
     function updateDashIndiv() {
         let session = document.getElementById('dashIndivSession').value;
         let evaluatee = document.getElementById('dashIndivEvaluatee').value;
-        let data = currentSummaryData.filter(r => r.session === session && r.evaluatee === evaluatee);
+        let data = currentSummaryData.filter(r => r['ครั้งที่'] === session && r['ชื่อผู้รับการนิเทศ'] === evaluatee);
         
         let avgsPerc = [0,0,0,0,0,0,0];
+        let totalAvgPercent = 0;
+        
         if(data.length > 0) {
             let sums = [0,0,0,0,0,0,0];
+            let allScoreSum = 0;
             data.forEach(r => {
-                sums[0] += parseFloat(r.c1)||0; sums[1] += parseFloat(r.c2)||0; sums[2] += parseFloat(r.c3)||0;
-                sums[3] += parseFloat(r.c4)||0; sums[4] += parseFloat(r.c5)||0; sums[5] += parseFloat(r.c6)||0;
-                sums[6] += parseFloat(r.c7)||0;
+                sums[0] += parseFloat(r['รวมคะแนนหมวด 1'])||0; sums[1] += parseFloat(r['รวมคะแนนหมวด 2'])||0; sums[2] += parseFloat(r['รวมคะแนนหมวด 3'])||0;
+                sums[3] += parseFloat(r['รวมคะแนนหมวด 4'])||0; sums[4] += parseFloat(r['รวมคะแนนหมวด 5'])||0; sums[5] += parseFloat(r['รวมคะแนนหมวด 6'])||0;
+                sums[6] += parseFloat(r['รวมคะแนนหมวด 7'])||0;
+                allScoreSum += parseFloat(r['รวมคะแนนทั้งหมด']) || 0;
             });
             avgsPerc = sums.map((s, i) => ((s / data.length) / categoriesData[i].maxScore * 100).toFixed(2));
+            totalAvgPercent = ((allScoreSum / data.length) / 200) * 100;
         }
+
+        let sumBox = document.getElementById('indivSummaryBox');
+        if(data.length > 0) {
+            let indivQualStr = totalAvgPercent >= 91 ? "ดีมาก" : totalAvgPercent >= 81 ? "ดี" : totalAvgPercent >= 71 ? "พอใช้" : totalAvgPercent >= 61 ? "ควรปรับปรุง" : "ไม่ผ่าน";
+            document.getElementById('indivAverageText').innerText = totalAvgPercent.toFixed(2);
+            document.getElementById('indivQualityText').innerText = indivQualStr;
+            sumBox.style.display = 'block';
+        } else { sumBox.style.display = 'none'; }
 
         if(charts['indiv']) charts['indiv'].destroy();
         charts['indiv'] = new Chart(document.getElementById('chartIndiv'), {
             type: 'bar',
-            data: {
-                labels: catLabelsFull,
-                datasets: [{ 
-                    label: `ร้อยละคะแนนเฉลี่ย`, 
-                    data: avgsPerc, 
-                    backgroundColor: vibrantColors, // ดึงชุดสีมาใช้
-                    borderColor: '#fff',
-                    borderWidth: 1
-                }]
-            },
-            options: { 
-                layout: { padding: { top: 25 } },
-                scales: { y: { beginAtZero: true, max: 100 } },
-                plugins: {
-                    legend: { display: false },
-                    datalabels: { anchor: 'end', align: 'top', color: '#000', font: { weight: 'bold' } }
-                }
-            }
+            data: { labels: catLabelsFull, datasets: [{ label: `ร้อยละคะแนนเฉลี่ย`, data: avgsPerc, backgroundColor: vibrantColors, borderColor: '#fff', borderWidth: 1 }] },
+            options: { layout: { padding: { top: 25 } }, scales: { y: { beginAtZero: true, max: 100 } }, plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', color: '#000', font: { weight: 'bold' } } } }
         });
     }
 
     function loadSummary() {
         const tbody = document.getElementById('summaryTableBody');
-        tbody.innerHTML = '<tr><td colspan="7" class="text-muted">กำลังโหลดข้อมูล...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="text-muted">กำลังโหลดข้อมูล...</td></tr>';
         
         fetch(GAS_URL + "?action=getSummary")
         .then(res => res.json())
         .then(data => {
             currentSummaryData = data.reverse(); 
-            if(data.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="text-muted">ไม่มีข้อมูล</td></tr>'; return; }
+            if(data.length === 0) { tbody.innerHTML = '<tr><td colspan="8" class="text-muted">ไม่มีข้อมูล</td></tr>'; return; }
             let html = '';
             
             currentSummaryData.forEach(row => {
-                let depBtn = row.deputySigned ? 'btn-success' : 'btn-danger';
-                let dirBtn = row.directorSigned ? 'btn-success' : 'btn-danger';
-                let loadBtn = row.pdfUrl ? `<a href="${row.pdfUrl}" target="_blank" class="btn btn-sm btn-outline-danger mt-1">โหลด</a>` : '';
+                let depBtn = !!row['URL ลายเซ็นรองฯ'] ? 'btn-success' : 'btn-danger';
+                let dirBtn = !!row['URL ลายเซ็น ผอ.'] ? 'btn-success' : 'btn-danger';
+                let loadBtn = row['URL ไฟล์ PDF'] ? `<a href="${row['URL ไฟล์ PDF']}" target="_blank" class="btn btn-sm btn-outline-danger mt-1">โหลด</a>` : '';
                 
                 html += `<tr>
-                    <td>${row.session}</td>
-                    <td>${formatDateThai(row.date)}</td>
-                    <td class="text-start">${row.evaluatee}</td>
-                    <td class="text-start">${row.evaluator}</td>
-                    <td class="text-start">${row.subject}</td>
+                    <td>${row['ครั้งที่']}</td>
+                    <td>${formatDateThai(row['วันที่สอน'])}</td>
+                    <td class="text-start">${row['ชื่อผู้รับการนิเทศ']}</td>
+                    <td class="text-start">${row['ผู้นิเทศ']}</td>
+                    <td class="text-start">${row['รายวิชา']}</td>
+                    <td><button class="btn btn-sm btn-info text-white w-100" onclick="editRecord(${row.rowIndex})">แก้ไข</button></td>
                     <td>
                         <button class="btn btn-sm ${depBtn} w-100 mb-1" onclick="openExecModal(${row.rowIndex}, 'deputy')">รอง ลงนาม</button>
                         <button class="btn btn-sm ${dirBtn} w-100" onclick="openExecModal(${row.rowIndex}, 'director')">ผอ. ลงนาม</button>
@@ -567,10 +537,53 @@
                 </tr>`;
             });
             tbody.innerHTML = html;
-
-            updateDashOverall();
-            updateDashIndiv();
+            updateDashOverall(); updateDashIndiv();
         });
+    }
+
+    // ฟังก์ชันแก้ไขข้อมูล (Edit Mode)
+    function editRecord(rowIndex) {
+        let pwd = prompt("กรุณากรอกรหัสผ่านเพื่อแก้ไขข้อมูล:");
+        if(pwd !== 'siri') { alert("รหัสผ่านไม่ถูกต้อง!"); return; }
+        
+        let row = currentSummaryData.find(r => r.rowIndex === rowIndex);
+        if(!row) return;
+
+        document.getElementById('evaluateeName').value = row['ชื่อผู้รับการนิเทศ'];
+        document.getElementById('evaluateePosition').value = row['ตำแหน่งผู้รับการนิเทศ'];
+        document.getElementById('evaluatorName').value = row['ผู้นิเทศ'];
+        document.getElementById('evaluatorPosition').value = row['ตำแหน่งผู้นิเทศ'];
+        document.getElementById('supervisionFormat').value = row['รูปแบบการนิเทศ'];
+        document.getElementById('subject').value = row['รายวิชา'];
+        document.getElementById('subjectCode').value = row['รหัสวิชา'];
+        document.getElementById('classLevel').value = row['ระดับชั้น'];
+        document.getElementById('date').value = parseDateToInputFormat(row['วันที่สอน']);
+        document.getElementById('time').value = row['เวลา'];
+        document.getElementById('sessionRound').value = row['ครั้งที่'];
+
+        categoriesData.forEach((cat, index) => {
+            let catNum = index + 1;
+            cat.questions.forEach((_, qIndex) => {
+                let qNum = qIndex + 1;
+                let val = row[`Q${catNum}.${qNum}`];
+                if(val) {
+                    let radio = document.querySelector(`input[name="q${catNum}_${qNum}"][value="${val}"]`);
+                    if(radio) radio.checked = true;
+                }
+            });
+            document.getElementById(`commentText${catNum}`).value = row[`ข้อเสนอแนะหมวด ${catNum}`] || '';
+        });
+
+        padEvaluatee.clear(); padEvaluator.clear(); calculateScore();
+        
+        editModeRowIndex = rowIndex; // เปิดโหมดแก้ไข
+        let submitBtn = document.getElementById('submitBtn');
+        submitBtn.innerHTML = 'บันทึกการแก้ไขข้อมูล';
+        submitBtn.classList.replace('btn-primary', 'btn-info');
+        
+        // สลับไปแท็บฟอร์ม
+        new bootstrap.Tab(document.getElementById('form-tab')).show();
+        alert('ดึงข้อมูลสำเร็จ กรุณาแก้ไขข้อมูลและกด "บันทึกการแก้ไขข้อมูล" ด้านล่าง\n(หากไม่ต้องการเปลี่ยนลายเซ็น ให้เว้นว่างกระดานเซ็นชื่อไว้)');
     }
 
     document.getElementById('evalForm').addEventListener('submit', function(e) {
@@ -578,7 +591,9 @@
         if (!this.checkValidity()) { this.reportValidity(); return; }
 
         let btn = document.getElementById('submitBtn');
-        btn.innerHTML = 'กำลังบันทึกข้อมูล...'; btn.disabled = true;
+        let isEdit = editModeRowIndex !== null;
+        btn.innerHTML = isEdit ? 'กำลังบันทึกการแก้ไข...' : 'กำลังบันทึกข้อมูล...'; 
+        btn.disabled = true;
 
         let formData = {
             evaluateeName: document.getElementById('evaluateeName').value,
@@ -592,11 +607,9 @@
             date: document.getElementById('date').value,
             time: document.getElementById('time').value,
             sessionRound: document.getElementById('sessionRound').value,
-            
             totalScore: totalScore, percent: percentage, qualityLevel: qualityStr,
             cat1: categoryScores[0], cat2: categoryScores[1], cat3: categoryScores[2],
             cat4: categoryScores[3], cat5: categoryScores[4], cat6: categoryScores[5], cat7: categoryScores[6],
-            
             signEvaluatee: padEvaluatee.isEmpty() ? '' : padEvaluatee.toDataURL(),
             signEvaluator: padEvaluator.isEmpty() ? '' : padEvaluator.toDataURL()
         };
@@ -611,17 +624,27 @@
             formData[`comment${catNum}`] = document.getElementById(`commentText${catNum}`).value;
         });
 
-        fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'saveForm', data: formData }) })
+        let actionStr = isEdit ? 'updateForm' : 'saveForm';
+        let payload = { action: actionStr, data: formData };
+        if(isEdit) payload.rowIndex = editModeRowIndex;
+
+        fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) })
         .then(res => res.json())
         .then(res => {
             if(res.status === 'success') {
-                alert('บันทึกข้อมูลสำเร็จ (สามารถไปที่แท็บสรุปผลเพื่อลงนามผู้บริหาร และสร้าง PDF ได้)');
+                alert('บันทึกข้อมูลสำเร็จ!');
                 document.getElementById('evalForm').reset();
                 padEvaluatee.clear(); padEvaluator.clear(); calculateScore();
+                
+                // รีเซ็ตปุ่มกลับเป็นโหมดปกติ
+                editModeRowIndex = null;
+                btn.innerHTML = 'บันทึกข้อมูล';
+                btn.classList.replace('btn-info', 'btn-primary');
+                
                 loadSummary();
             }
         })
-        .finally(() => { btn.innerHTML = 'บันทึกข้อมูล'; btn.disabled = false; });
+        .finally(() => { btn.disabled = false; });
     });
 
     let execModal;
@@ -649,30 +672,46 @@
             document.getElementById('execPosDisplay').innerText = 'ผู้อำนวยการโรงเรียนวัดแม่กะ';
         }
 
+        // จัดเตรียมข้อความสรุปข้อเสนอแนะ 7 หมวด
+        let commentsListHtml = '';
+        for(let i=1; i<=7; i++) {
+            let cText = rowData[`ข้อเสนอแนะหมวด ${i}`];
+            if(cText && cText.trim() !== '') {
+                commentsListHtml += `<li><strong>หมวด ${i}:</strong> ${cText}</li>`;
+            }
+        }
+        if(commentsListHtml === '') commentsListHtml = '<li class="text-muted">ไม่มีข้อเสนอแนะ</li>';
+
         let summaryHtml = `
             <div class="row">
                 <div class="col-md-6">
-                    <strong>รูปแบบ:</strong> ${rowData.format} (ครั้งที่ ${rowData.session})<br>
-                    <strong>วันที่:</strong> ${formatDateThai(rowData.date)}<br>
-                    <strong>วิชา:</strong> ${rowData.subject}<br>
-                    <strong>ผู้รับการนิเทศ:</strong> ${rowData.evaluatee} <br>
-                    <strong>ผู้นิเทศ:</strong> ${rowData.evaluator} <br>
+                    <strong>รูปแบบ:</strong> ${rowData['รูปแบบการนิเทศ']} (ครั้งที่ ${rowData['ครั้งที่']})<br>
+                    <strong>วันที่:</strong> ${formatDateThai(rowData['วันที่สอน'])}<br>
+                    <strong>วิชา:</strong> ${rowData['รายวิชา']}<br>
+                    <strong>ผู้รับการนิเทศ:</strong> ${rowData['ชื่อผู้รับการนิเทศ']} <br>
+                    <strong>ผู้นิเทศ:</strong> ${rowData['ผู้นิเทศ']} <br>
                 </div>
                 <div class="col-md-6 border-start">
-                    <strong>คะแนนรวม:</strong> <span class="text-danger fw-bold fs-5">${rowData.totalScore} / 200</span> 
-                    (ระดับ: <span class="text-success fw-bold">${rowData.quality}</span>)<br>
+                    <strong>คะแนนรวม:</strong> <span class="text-danger fw-bold fs-5">${rowData['รวมคะแนนทั้งหมด']} / 200</span> 
+                    (ระดับ: <span class="text-success fw-bold">${rowData['สรุปผลระดับคุณภาพ']}</span>)<br>
                 </div>
             </div>
             <hr class="my-2">
             <div class="mt-2" style="font-size: 0.9em; line-height: 1.6;">
                 <strong>สรุปคะแนนรายหมวด:</strong><br>
-                &bull; หมวดที่ 1 การเตรียมความพร้อมก่อนสอน ได้ <span class="text-primary fw-bold">${rowData.c1}</span> คะแนน จากคะแนนเต็ม 15 คะแนน<br>
-                &bull; หมวดที่ 2 การจัดกิจกรรมการเรียนรู้ ได้ <span class="text-primary fw-bold">${rowData.c2}</span> คะแนน จากคะแนนเต็ม 50 คะแนน<br>
-                &bull; หมวดที่ 3 การใช้สื่อเทคโนโลยี ได้ <span class="text-primary fw-bold">${rowData.c3}</span> คะแนน จากคะแนนเต็ม 15 คะแนน<br>
-                &bull; หมวดที่ 4 การจัดบรรยากาศและบริหารชั้นเรียน ได้ <span class="text-primary fw-bold">${rowData.c4}</span> คะแนน จากคะแนนเต็ม 20 คะแนน<br>
-                &bull; หมวดที่ 5 การวัดผลและประเมินผล ได้ <span class="text-primary fw-bold">${rowData.c5}</span> คะแนน จากคะแนนเต็ม 25 คะแนน<br>
-                &bull; หมวดที่ 6 ประเมินแผนการจัดการเรียนรู้ ได้ <span class="text-primary fw-bold">${rowData.c6}</span> คะแนน จากคะแนนเต็ม 40 คะแนน<br>
-                &bull; หมวดที่ 7 การบริหารจัดการชั้นเรียน ได้ <span class="text-primary fw-bold">${rowData.c7}</span> คะแนน จากคะแนนเต็ม 35 คะแนน
+                &bull; หมวดที่ 1 การเตรียมความพร้อมก่อนสอน ได้ <span class="text-primary fw-bold">${rowData['รวมคะแนนหมวด 1']}</span> คะแนน จากคะแนนเต็ม 15 คะแนน<br>
+                &bull; หมวดที่ 2 การจัดกิจกรรมการเรียนรู้ ได้ <span class="text-primary fw-bold">${rowData['รวมคะแนนหมวด 2']}</span> คะแนน จากคะแนนเต็ม 50 คะแนน<br>
+                &bull; หมวดที่ 3 การใช้สื่อเทคโนโลยี ได้ <span class="text-primary fw-bold">${rowData['รวมคะแนนหมวด 3']}</span> คะแนน จากคะแนนเต็ม 15 คะแนน<br>
+                &bull; หมวดที่ 4 การจัดบรรยากาศและบริหารชั้นเรียน ได้ <span class="text-primary fw-bold">${rowData['รวมคะแนนหมวด 4']}</span> คะแนน จากคะแนนเต็ม 20 คะแนน<br>
+                &bull; หมวดที่ 5 การวัดผลและประเมินผล ได้ <span class="text-primary fw-bold">${rowData['รวมคะแนนหมวด 5']}</span> คะแนน จากคะแนนเต็ม 25 คะแนน<br>
+                &bull; หมวดที่ 6 ประเมินแผนการจัดการเรียนรู้ ได้ <span class="text-primary fw-bold">${rowData['รวมคะแนนหมวด 6']}</span> คะแนน จากคะแนนเต็ม 40 คะแนน<br>
+                &bull; หมวดที่ 7 การบริหารจัดการชั้นเรียน ได้ <span class="text-primary fw-bold">${rowData['รวมคะแนนหมวด 7']}</span> คะแนน จากคะแนนเต็ม 35 คะแนน
+            </div>
+            <div class="mt-3 p-2 bg-white border border-info rounded" style="font-size: 0.9em;">
+                <h6 class="text-info fw-bold mb-1 border-bottom pb-1">สรุปข้อเสนอแนะรายหมวด:</h6>
+                <ul class="mb-0 ps-3 comments-list">
+                    ${commentsListHtml}
+                </ul>
             </div>
         `;
         document.getElementById('modalSummaryInfo').innerHTML = summaryHtml;
@@ -711,9 +750,7 @@
         .finally(() => { btnElement.innerHTML = 'สร้าง'; btnElement.disabled = false; });
     }
     
-    document.addEventListener("DOMContentLoaded", function() {
-        loadSummary();
-    });
+    document.addEventListener("DOMContentLoaded", function() { loadSummary(); });
 </script>
 
 </body>
