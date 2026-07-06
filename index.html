@@ -54,12 +54,12 @@
                 <div class="card shadow-sm mb-4">
                     <div class="card-header">ข้อมูลทั่วไป</div>
                     <div class="card-body row g-3">
-                        <div class="col-md-3">
-                            <label class="form-label">ชื่อผู้รับการนิเทศ</label>
+                        <div class="col-md-4">
+                            <label class="form-label text-primary fw-bold">ชื่อผู้รับการนิเทศ</label>
                             <select class="form-select evaluatee-dropdown" id="evaluateeName" required><option value="">-- เลือกชื่อ --</option></select>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">ตำแหน่งผู้รับการนิเทศ</label>
+                        <div class="col-md-4">
+                            <label class="form-label text-primary fw-bold">ตำแหน่งผู้รับการนิเทศ</label>
                             <select class="form-select" id="evaluateePosition" required>
                                 <option value="">-- เลือกตำแหน่ง --</option>
                                 <option value="ครู">ครู</option>
@@ -67,12 +67,26 @@
                                 <option value="ผู้อำนวยการสถานศึกษา">ผู้อำนวยการสถานศึกษา</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">ชื่อผู้นิเทศ</label>
+                        <div class="col-md-4">
+                            <label class="form-label text-primary fw-bold">วิทยฐานะผู้รับการนิเทศ</label>
+                            <select class="form-select" id="evaluateeAcademic" required>
+                                <option value="">-- เลือกวิทยฐานะ --</option>
+                                <option value="-">-</option>
+                                <option value="ครูชำนาญการ">ครูชำนาญการ</option>
+                                <option value="ครูชำนาญการพิเศษ">ครูชำนาญการพิเศษ</option>
+                                <option value="รองผู้อำนวยการชำนาญการ">รองผู้อำนวยการชำนาญการ</option>
+                                <option value="รองผู้อำนวยการชำนาญการพิเศษ">รองผู้อำนวยการชำนาญการพิเศษ</option>
+                                <option value="ผู้อำนวยการชำนาญการ">ผู้อำนวยการชำนาญการ</option>
+                                <option value="ผู้อำนวยการชำนาญการพิเศษ">ผู้อำนวยการชำนาญการพิเศษ</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label text-success fw-bold mt-2">ชื่อผู้นิเทศ</label>
                             <select class="form-select evaluator-dropdown" id="evaluatorName" required><option value="">-- เลือกชื่อ --</option></select>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">ตำแหน่งผู้นิเทศ</label>
+                        <div class="col-md-4">
+                            <label class="form-label text-success fw-bold mt-2">ตำแหน่งผู้นิเทศ</label>
                             <select class="form-select" id="evaluatorPosition" required>
                                 <option value="">-- เลือกตำแหน่ง --</option>
                                 <option value="ครู">ครู</option>
@@ -80,6 +94,20 @@
                                 <option value="ผู้อำนวยการสถานศึกษา">ผู้อำนวยการสถานศึกษา</option>
                             </select>
                         </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-success fw-bold mt-2">วิทยฐานะผู้นิเทศ</label>
+                            <select class="form-select" id="evaluatorAcademic" required>
+                                <option value="">-- เลือกวิทยฐานะ --</option>
+                                <option value="-">-</option>
+                                <option value="ครูชำนาญการ">ครูชำนาญการ</option>
+                                <option value="ครูชำนาญการพิเศษ">ครูชำนาญการพิเศษ</option>
+                                <option value="รองผู้อำนวยการชำนาญการ">รองผู้อำนวยการชำนาญการ</option>
+                                <option value="รองผู้อำนวยการชำนาญการพิเศษ">รองผู้อำนวยการชำนาญการพิเศษ</option>
+                                <option value="ผู้อำนวยการชำนาญการ">ผู้อำนวยการชำนาญการ</option>
+                                <option value="ผู้อำนวยการชำนาญการพิเศษ">ผู้อำนวยการชำนาญการพิเศษ</option>
+                            </select>
+                        </div>
+                        <div class="col-12"><hr class="my-1"></div>
 
                         <div class="col-md-4">
                             <label class="form-label">รูปแบบการนิเทศ</label>
@@ -390,7 +418,7 @@
     }
 
     let currentSummaryData = [];
-    let editModeRowIndex = null; // ตัวแปรสำหรับจำว่ากำลังแก้ไขแถวไหน
+    let editModeRowIndex = null; 
 
     const vibrantColors = ['rgba(255, 99, 132, 0.85)', 'rgba(54, 162, 235, 0.85)', 'rgba(255, 206, 86, 0.85)', 'rgba(75, 192, 192, 0.85)', 'rgba(153, 102, 255, 0.85)', 'rgba(255, 159, 64, 0.85)', 'rgba(0, 209, 178, 0.85)', 'rgba(255, 56, 96, 0.85)', 'rgba(132, 255, 99, 0.85)', 'rgba(235, 54, 162, 0.85)'];
 
@@ -422,18 +450,12 @@
                 sums[0] += parseFloat(r['รวมคะแนนหมวด 1']) || 0; sums[1] += parseFloat(r['รวมคะแนนหมวด 2']) || 0; sums[2] += parseFloat(r['รวมคะแนนหมวด 3']) || 0;
                 sums[3] += parseFloat(r['รวมคะแนนหมวด 4']) || 0; sums[4] += parseFloat(r['รวมคะแนนหมวด 5']) || 0; sums[5] += parseFloat(r['รวมคะแนนหมวด 6']) || 0;
                 sums[6] += parseFloat(r['รวมคะแนนหมวด 7']) || 0;
-                
                 allScoreSum += parseFloat(r['รวมคะแนนทั้งหมด']) || 0;
+                
                 let evalName = r['ชื่อผู้รับการนิเทศ'];
                 if(!teacherData[evalName]) teacherData[evalName] = { count: 0, sums: [0,0,0,0,0,0,0] };
                 teacherData[evalName].count++;
-                teacherData[evalName].sums[0] += parseFloat(r['รวมคะแนนหมวด 1']) || 0;
-                teacherData[evalName].sums[1] += parseFloat(r['รวมคะแนนหมวด 2']) || 0;
-                teacherData[evalName].sums[2] += parseFloat(r['รวมคะแนนหมวด 3']) || 0;
-                teacherData[evalName].sums[3] += parseFloat(r['รวมคะแนนหมวด 4']) || 0;
-                teacherData[evalName].sums[4] += parseFloat(r['รวมคะแนนหมวด 5']) || 0;
-                teacherData[evalName].sums[5] += parseFloat(r['รวมคะแนนหมวด 6']) || 0;
-                teacherData[evalName].sums[6] += parseFloat(r['รวมคะแนนหมวด 7']) || 0;
+                for(let i=0; i<7; i++) teacherData[evalName].sums[i] += parseFloat(r[`รวมคะแนนหมวด ${i+1}`]) || 0;
             });
             avgsPerc = sums.map((s, i) => ((s / data.length) / categoriesData[i].maxScore * 100).toFixed(2));
             totalAvgPercent = ((allScoreSum / data.length) / 200) * 100;
@@ -478,9 +500,7 @@
             let sums = [0,0,0,0,0,0,0];
             let allScoreSum = 0;
             data.forEach(r => {
-                sums[0] += parseFloat(r['รวมคะแนนหมวด 1'])||0; sums[1] += parseFloat(r['รวมคะแนนหมวด 2'])||0; sums[2] += parseFloat(r['รวมคะแนนหมวด 3'])||0;
-                sums[3] += parseFloat(r['รวมคะแนนหมวด 4'])||0; sums[4] += parseFloat(r['รวมคะแนนหมวด 5'])||0; sums[5] += parseFloat(r['รวมคะแนนหมวด 6'])||0;
-                sums[6] += parseFloat(r['รวมคะแนนหมวด 7'])||0;
+                for(let i=0; i<7; i++) sums[i] += parseFloat(r[`รวมคะแนนหมวด ${i+1}`])||0;
                 allScoreSum += parseFloat(r['รวมคะแนนทั้งหมด']) || 0;
             });
             avgsPerc = sums.map((s, i) => ((s / data.length) / categoriesData[i].maxScore * 100).toFixed(2));
@@ -541,7 +561,6 @@
         });
     }
 
-    // ฟังก์ชันแก้ไขข้อมูล (Edit Mode)
     function editRecord(rowIndex) {
         let pwd = prompt("กรุณากรอกรหัสผ่านเพื่อแก้ไขข้อมูล:");
         if(pwd !== 'siri') { alert("รหัสผ่านไม่ถูกต้อง!"); return; }
@@ -549,17 +568,19 @@
         let row = currentSummaryData.find(r => r.rowIndex === rowIndex);
         if(!row) return;
 
-        document.getElementById('evaluateeName').value = row['ชื่อผู้รับการนิเทศ'];
-        document.getElementById('evaluateePosition').value = row['ตำแหน่งผู้รับการนิเทศ'];
-        document.getElementById('evaluatorName').value = row['ผู้นิเทศ'];
-        document.getElementById('evaluatorPosition').value = row['ตำแหน่งผู้นิเทศ'];
-        document.getElementById('supervisionFormat').value = row['รูปแบบการนิเทศ'];
-        document.getElementById('subject').value = row['รายวิชา'];
-        document.getElementById('subjectCode').value = row['รหัสวิชา'];
-        document.getElementById('classLevel').value = row['ระดับชั้น'];
+        document.getElementById('evaluateeName').value = row['ชื่อผู้รับการนิเทศ'] || '';
+        document.getElementById('evaluateePosition').value = row['ตำแหน่งผู้รับการนิเทศ'] || '';
+        document.getElementById('evaluateeAcademic').value = row['วิทยฐานะผู้รับการนิเทศ'] || '';
+        document.getElementById('evaluatorName').value = row['ผู้นิเทศ'] || '';
+        document.getElementById('evaluatorPosition').value = row['ตำแหน่งผู้นิเทศ'] || '';
+        document.getElementById('evaluatorAcademic').value = row['วิทยฐานะผู้นิเทศ'] || '';
+        document.getElementById('supervisionFormat').value = row['รูปแบบการนิเทศ'] || '';
+        document.getElementById('subject').value = row['รายวิชา'] || '';
+        document.getElementById('subjectCode').value = row['รหัสวิชา'] || '';
+        document.getElementById('classLevel').value = row['ระดับชั้น'] || '';
         document.getElementById('date').value = parseDateToInputFormat(row['วันที่สอน']);
-        document.getElementById('time').value = row['เวลา'];
-        document.getElementById('sessionRound').value = row['ครั้งที่'];
+        document.getElementById('time').value = row['เวลา'] || '';
+        document.getElementById('sessionRound').value = row['ครั้งที่'] || '';
 
         categoriesData.forEach((cat, index) => {
             let catNum = index + 1;
@@ -576,12 +597,11 @@
 
         padEvaluatee.clear(); padEvaluator.clear(); calculateScore();
         
-        editModeRowIndex = rowIndex; // เปิดโหมดแก้ไข
+        editModeRowIndex = rowIndex; 
         let submitBtn = document.getElementById('submitBtn');
         submitBtn.innerHTML = 'บันทึกการแก้ไขข้อมูล';
         submitBtn.classList.replace('btn-primary', 'btn-info');
         
-        // สลับไปแท็บฟอร์ม
         new bootstrap.Tab(document.getElementById('form-tab')).show();
         alert('ดึงข้อมูลสำเร็จ กรุณาแก้ไขข้อมูลและกด "บันทึกการแก้ไขข้อมูล" ด้านล่าง\n(หากไม่ต้องการเปลี่ยนลายเซ็น ให้เว้นว่างกระดานเซ็นชื่อไว้)');
     }
@@ -598,8 +618,10 @@
         let formData = {
             evaluateeName: document.getElementById('evaluateeName').value,
             evaluateePosition: document.getElementById('evaluateePosition').value,
+            evaluateeAcademic: document.getElementById('evaluateeAcademic').value,
             evaluatorName: document.getElementById('evaluatorName').value,
             evaluatorPosition: document.getElementById('evaluatorPosition').value,
+            evaluatorAcademic: document.getElementById('evaluatorAcademic').value,
             supervisionFormat: document.getElementById('supervisionFormat').value,
             subject: document.getElementById('subject').value,
             subjectCode: document.getElementById('subjectCode').value,
@@ -607,9 +629,11 @@
             date: document.getElementById('date').value,
             time: document.getElementById('time').value,
             sessionRound: document.getElementById('sessionRound').value,
+            
             totalScore: totalScore, percent: percentage, qualityLevel: qualityStr,
             cat1: categoryScores[0], cat2: categoryScores[1], cat3: categoryScores[2],
             cat4: categoryScores[3], cat5: categoryScores[4], cat6: categoryScores[5], cat7: categoryScores[6],
+            
             signEvaluatee: padEvaluatee.isEmpty() ? '' : padEvaluatee.toDataURL(),
             signEvaluator: padEvaluator.isEmpty() ? '' : padEvaluator.toDataURL()
         };
@@ -636,7 +660,6 @@
                 document.getElementById('evalForm').reset();
                 padEvaluatee.clear(); padEvaluator.clear(); calculateScore();
                 
-                // รีเซ็ตปุ่มกลับเป็นโหมดปกติ
                 editModeRowIndex = null;
                 btn.innerHTML = 'บันทึกข้อมูล';
                 btn.classList.replace('btn-info', 'btn-primary');
@@ -672,7 +695,6 @@
             document.getElementById('execPosDisplay').innerText = 'ผู้อำนวยการโรงเรียนวัดแม่กะ';
         }
 
-        // จัดเตรียมข้อความสรุปข้อเสนอแนะ 7 หมวด
         let commentsListHtml = '';
         for(let i=1; i<=7; i++) {
             let cText = rowData[`ข้อเสนอแนะหมวด ${i}`];
@@ -682,13 +704,15 @@
         }
         if(commentsListHtml === '') commentsListHtml = '<li class="text-muted">ไม่มีข้อเสนอแนะ</li>';
 
+        let acadEval = rowData['วิทยฐานะผู้รับการนิเทศ'] && rowData['วิทยฐานะผู้รับการนิเทศ'] !== '-' ? ' ' + rowData['วิทยฐานะผู้รับการนิเทศ'] : '';
+        
         let summaryHtml = `
             <div class="row">
                 <div class="col-md-6">
                     <strong>รูปแบบ:</strong> ${rowData['รูปแบบการนิเทศ']} (ครั้งที่ ${rowData['ครั้งที่']})<br>
                     <strong>วันที่:</strong> ${formatDateThai(rowData['วันที่สอน'])}<br>
                     <strong>วิชา:</strong> ${rowData['รายวิชา']}<br>
-                    <strong>ผู้รับการนิเทศ:</strong> ${rowData['ชื่อผู้รับการนิเทศ']} <br>
+                    <strong>ผู้รับการนิเทศ:</strong> ${rowData['ชื่อผู้รับการนิเทศ']} (${rowData['ตำแหน่งผู้รับการนิเทศ']}${acadEval})<br>
                     <strong>ผู้นิเทศ:</strong> ${rowData['ผู้นิเทศ']} <br>
                 </div>
                 <div class="col-md-6 border-start">
