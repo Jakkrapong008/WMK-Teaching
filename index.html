@@ -11,6 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         body { font-family: 'Sarabun', sans-serif; background-color: #f8f9fa; }
@@ -26,6 +27,8 @@
         .table-responsive { margin-bottom: 20px; }
         .question-text { text-align: left; font-size: 15px; }
         .comments-list li { margin-bottom: 5px; }
+        /* ตกแต่ง SweetAlert ให้ใช้ฟอนต์ Sarabun */
+        .swal2-popup { font-family: 'Sarabun', sans-serif; }
     </style>
 </head>
 <body>
@@ -401,27 +404,16 @@
 
     function formatDateThai(dateString) {
         if(!dateString || dateString === '-') return '-';
-        return new Date(dateString).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+        let d = new Date(dateString);
+        let months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+        let thaiYear = d.getFullYear() + 543;
+        return `${d.getDate()} ${months[d.getMonth()]} พ.ศ. ${thaiYear}`;
     }
     
-    function parseDateToInputFormat(dateStr) {
-        if(!dateStr) return '';
-        try {
-            let d = new Date(dateStr);
-            if(isNaN(d.getTime())) {
-                let parts = dateStr.split('/');
-                if(parts.length === 3) d = new Date(parts[2], parts[1]-1, parts[0]);
-            }
-            if(isNaN(d.getTime())) return '';
-            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        } catch(e) { return ''; }
-    }
-
     let currentSummaryData = [];
     let editModeRowIndex = null; 
 
     const vibrantColors = ['rgba(255, 99, 132, 0.85)', 'rgba(54, 162, 235, 0.85)', 'rgba(255, 206, 86, 0.85)', 'rgba(75, 192, 192, 0.85)', 'rgba(153, 102, 255, 0.85)', 'rgba(255, 159, 64, 0.85)', 'rgba(0, 209, 178, 0.85)', 'rgba(255, 56, 96, 0.85)', 'rgba(132, 255, 99, 0.85)', 'rgba(235, 54, 162, 0.85)'];
-
     let charts = {};
     const catLabelsFull = categoriesData.map(cat => cat.title);
     
@@ -523,6 +515,25 @@
         });
     }
 
+    // ====== ฟังก์ชันจัดการรหัสผ่าน (SweetAlert2) ======
+    async function checkPassword(callback) {
+        const { value: password } = await Swal.fire({
+            title: 'เข้าสู่ระบบผู้บริหาร',
+            input: 'password',
+            inputLabel: 'กรุณากรอกรหัสผ่าน (siri)',
+            inputPlaceholder: 'รหัสผ่าน',
+            showCancelButton: true,
+            confirmButtonText: 'ตกลง',
+            cancelButtonText: 'ยกเลิก',
+            inputAttributes: { autocapitalize: 'off', autocorrect: 'off' }
+        });
+        if (password === 'siri') {
+            callback();
+        } else if (password) {
+            Swal.fire('ข้อผิดพลาด', 'รหัสผ่านไม่ถูกต้อง!', 'error');
+        }
+    }
+
     function loadSummary() {
         const tbody = document.getElementById('summaryTableBody');
         tbody.innerHTML = '<tr><td colspan="8" class="text-muted">กำลังโหลดข้อมูล...</td></tr>';
@@ -551,7 +562,7 @@
                         <button class="btn btn-sm ${dirBtn} w-100" onclick="openExecModal(${row.rowIndex}, 'director')">ผอ. ลงนาม</button>
                     </td>
                     <td>
-                        <button class="btn btn-sm btn-warning w-100" onclick="generatePDF(${row.rowIndex}, this)">สร้าง</button>
+                        <button class="btn btn-sm btn-warning w-100" onclick="generatePDF(${row.rowIndex})">สร้าง</button>
                         ${loadBtn}
                     </td>
                 </tr>`;
@@ -562,58 +573,60 @@
     }
 
     function editRecord(rowIndex) {
-        let pwd = prompt("กรุณากรอกรหัสผ่านเพื่อแก้ไขข้อมูล:");
-        if(pwd !== 'siri') { alert("รหัสผ่านไม่ถูกต้อง!"); return; }
-        
-        let row = currentSummaryData.find(r => r.rowIndex === rowIndex);
-        if(!row) return;
+        checkPassword(() => {
+            let row = currentSummaryData.find(r => r.rowIndex === rowIndex);
+            if(!row) return;
 
-        document.getElementById('evaluateeName').value = row['ชื่อผู้รับการนิเทศ'] || '';
-        document.getElementById('evaluateePosition').value = row['ตำแหน่งผู้รับการนิเทศ'] || '';
-        document.getElementById('evaluateeAcademic').value = row['วิทยฐานะผู้รับการนิเทศ'] || '';
-        document.getElementById('evaluatorName').value = row['ผู้นิเทศ'] || '';
-        document.getElementById('evaluatorPosition').value = row['ตำแหน่งผู้นิเทศ'] || '';
-        document.getElementById('evaluatorAcademic').value = row['วิทยฐานะผู้นิเทศ'] || '';
-        document.getElementById('supervisionFormat').value = row['รูปแบบการนิเทศ'] || '';
-        document.getElementById('subject').value = row['รายวิชา'] || '';
-        document.getElementById('subjectCode').value = row['รหัสวิชา'] || '';
-        document.getElementById('classLevel').value = row['ระดับชั้น'] || '';
-        document.getElementById('date').value = parseDateToInputFormat(row['วันที่สอน']);
-        document.getElementById('time').value = row['เวลา'] || '';
-        document.getElementById('sessionRound').value = row['ครั้งที่'] || '';
+            document.getElementById('evaluateeName').value = row['ชื่อผู้รับการนิเทศ'] || '';
+            document.getElementById('evaluateePosition').value = row['ตำแหน่งผู้รับการนิเทศ'] || '';
+            document.getElementById('evaluateeAcademic').value = row['วิทยฐานะผู้รับการนิเทศ'] || '';
+            document.getElementById('evaluatorName').value = row['ผู้นิเทศ'] || '';
+            document.getElementById('evaluatorPosition').value = row['ตำแหน่งผู้นิเทศ'] || '';
+            document.getElementById('evaluatorAcademic').value = row['วิทยฐานะผู้นิเทศ'] || '';
+            document.getElementById('supervisionFormat').value = row['รูปแบบการนิเทศ'] || '';
+            document.getElementById('subject').value = row['รายวิชา'] || '';
+            document.getElementById('subjectCode').value = row['รหัสวิชา'] || '';
+            document.getElementById('classLevel').value = row['ระดับชั้น'] || '';
+            document.getElementById('date').value = row['วันที่สอน']; // ดึงมาเป็น YYYY-MM-DD ได้เลย
+            document.getElementById('time').value = row['เวลา'] || '';
+            document.getElementById('sessionRound').value = row['ครั้งที่'] || '';
 
-        categoriesData.forEach((cat, index) => {
-            let catNum = index + 1;
-            cat.questions.forEach((_, qIndex) => {
-                let qNum = qIndex + 1;
-                let val = row[`Q${catNum}.${qNum}`];
-                if(val) {
-                    let radio = document.querySelector(`input[name="q${catNum}_${qNum}"][value="${val}"]`);
-                    if(radio) radio.checked = true;
-                }
+            categoriesData.forEach((cat, index) => {
+                let catNum = index + 1;
+                cat.questions.forEach((_, qIndex) => {
+                    let qNum = qIndex + 1;
+                    let val = row[`Q${catNum}.${qNum}`];
+                    if(val) {
+                        let radio = document.querySelector(`input[name="q${catNum}_${qNum}"][value="${val}"]`);
+                        if(radio) radio.checked = true;
+                    }
+                });
+                document.getElementById(`commentText${catNum}`).value = row[`ข้อเสนอแนะหมวด ${catNum}`] || '';
             });
-            document.getElementById(`commentText${catNum}`).value = row[`ข้อเสนอแนะหมวด ${catNum}`] || '';
-        });
 
-        padEvaluatee.clear(); padEvaluator.clear(); calculateScore();
-        
-        editModeRowIndex = rowIndex; 
-        let submitBtn = document.getElementById('submitBtn');
-        submitBtn.innerHTML = 'บันทึกการแก้ไขข้อมูล';
-        submitBtn.classList.replace('btn-primary', 'btn-info');
-        
-        new bootstrap.Tab(document.getElementById('form-tab')).show();
-        alert('ดึงข้อมูลสำเร็จ กรุณาแก้ไขข้อมูลและกด "บันทึกการแก้ไขข้อมูล" ด้านล่าง\n(หากไม่ต้องการเปลี่ยนลายเซ็น ให้เว้นว่างกระดานเซ็นชื่อไว้)');
+            padEvaluatee.clear(); padEvaluator.clear(); calculateScore();
+            
+            editModeRowIndex = rowIndex; 
+            let submitBtn = document.getElementById('submitBtn');
+            submitBtn.innerHTML = 'บันทึกการแก้ไขข้อมูล';
+            submitBtn.classList.replace('btn-primary', 'btn-info');
+            
+            new bootstrap.Tab(document.getElementById('form-tab')).show();
+            Swal.fire('ดึงข้อมูลสำเร็จ', 'กรุณาแก้ไขข้อมูลและกด "บันทึกการแก้ไขข้อมูล" ด้านล่าง<br><small>(หากไม่ต้องการเปลี่ยนลายเซ็น ให้เว้นว่างกระดานเซ็นชื่อไว้)</small>', 'info');
+        });
     }
 
     document.getElementById('evalForm').addEventListener('submit', function(e) {
         e.preventDefault();
         if (!this.checkValidity()) { this.reportValidity(); return; }
 
-        let btn = document.getElementById('submitBtn');
         let isEdit = editModeRowIndex !== null;
-        btn.innerHTML = isEdit ? 'กำลังบันทึกการแก้ไข...' : 'กำลังบันทึกข้อมูล...'; 
-        btn.disabled = true;
+        
+        Swal.fire({
+            title: isEdit ? 'กำลังบันทึกการแก้ไข...' : 'กำลังบันทึกข้อมูล...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
 
         let formData = {
             evaluateeName: document.getElementById('evaluateeName').value,
@@ -648,103 +661,101 @@
             formData[`comment${catNum}`] = document.getElementById(`commentText${catNum}`).value;
         });
 
-        let actionStr = isEdit ? 'updateForm' : 'saveForm';
-        let payload = { action: actionStr, data: formData };
+        let payload = { action: isEdit ? 'updateForm' : 'saveForm', data: formData };
         if(isEdit) payload.rowIndex = editModeRowIndex;
 
         fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) })
         .then(res => res.json())
         .then(res => {
             if(res.status === 'success') {
-                alert('บันทึกข้อมูลสำเร็จ!');
+                Swal.fire('สำเร็จ!', 'บันทึกข้อมูลเรียบร้อยแล้ว', 'success');
                 document.getElementById('evalForm').reset();
                 padEvaluatee.clear(); padEvaluator.clear(); calculateScore();
                 
                 editModeRowIndex = null;
+                let btn = document.getElementById('submitBtn');
                 btn.innerHTML = 'บันทึกข้อมูล';
                 btn.classList.replace('btn-info', 'btn-primary');
-                
                 loadSummary();
+            } else {
+                Swal.fire('ข้อผิดพลาด', res.message, 'error');
             }
-        })
-        .finally(() => { btn.disabled = false; });
+        }).catch(err => {
+            Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
+        });
     });
 
     let execModal;
     function openExecModal(rowIndex, role) {
-        let pwd = prompt("กรุณากรอกรหัสผ่านเพื่อเข้าสู่ระบบลงนามผู้บริหาร:");
-        if (pwd !== 'siri') { alert("รหัสผ่านไม่ถูกต้อง!"); return; }
-        
-        if(!execModal) { execModal = new bootstrap.Modal(document.getElementById('execSignModal')); }
-        let rowData = currentSummaryData.find(r => r.rowIndex === rowIndex);
-        
-        document.getElementById('modalRowIndex').value = rowIndex;
-        document.getElementById('modalRole').value = role;
-        document.getElementById('execComment').value = '';
-        padExec.clear();
-        
-        if (role === 'deputy') {
-            document.getElementById('modalTitle').innerText = 'ส่วนลงนาม - รองผู้อำนวยการสถานศึกษา';
-            document.getElementById('modalCommentLabel').innerText = 'ความเห็นของรองผู้อำนวยการโรงเรียน';
-            document.getElementById('execNameDisplay').innerText = '( นายจักรพงศ์ จันทวงศ์ )';
-            document.getElementById('execPosDisplay').innerText = 'รองผู้อำนวยการโรงเรียนวัดแม่กะ';
-        } else {
-            document.getElementById('modalTitle').innerText = 'ส่วนลงนาม - ผู้อำนวยการสถานศึกษา';
-            document.getElementById('modalCommentLabel').innerText = 'ความเห็นของผู้อำนวยการโรงเรียน';
-            document.getElementById('execNameDisplay').innerText = '( นางสาวศิริยา อินทกาโมทย์ )';
-            document.getElementById('execPosDisplay').innerText = 'ผู้อำนวยการโรงเรียนวัดแม่กะ';
-        }
-
-        let commentsListHtml = '';
-        for(let i=1; i<=7; i++) {
-            let cText = rowData[`ข้อเสนอแนะหมวด ${i}`];
-            if(cText && cText.trim() !== '') {
-                commentsListHtml += `<li><strong>หมวด ${i}:</strong> ${cText}</li>`;
+        checkPassword(() => {
+            if(!execModal) { execModal = new bootstrap.Modal(document.getElementById('execSignModal')); }
+            let rowData = currentSummaryData.find(r => r.rowIndex === rowIndex);
+            
+            document.getElementById('modalRowIndex').value = rowIndex;
+            document.getElementById('modalRole').value = role;
+            document.getElementById('execComment').value = '';
+            padExec.clear();
+            
+            if (role === 'deputy') {
+                document.getElementById('modalTitle').innerText = 'ส่วนลงนาม - รองผู้อำนวยการสถานศึกษา';
+                document.getElementById('modalCommentLabel').innerText = 'ความเห็นของรองผู้อำนวยการโรงเรียน';
+                document.getElementById('execNameDisplay').innerText = '( นายจักรพงศ์ จันทวงศ์ )';
+                document.getElementById('execPosDisplay').innerText = 'รองผู้อำนวยการโรงเรียนวัดแม่กะ';
+            } else {
+                document.getElementById('modalTitle').innerText = 'ส่วนลงนาม - ผู้อำนวยการสถานศึกษา';
+                document.getElementById('modalCommentLabel').innerText = 'ความเห็นของผู้อำนวยการโรงเรียน';
+                document.getElementById('execNameDisplay').innerText = '( นางสาวศิริยา อินทกาโมทย์ )';
+                document.getElementById('execPosDisplay').innerText = 'ผู้อำนวยการโรงเรียนวัดแม่กะ';
             }
-        }
-        if(commentsListHtml === '') commentsListHtml = '<li class="text-muted">ไม่มีข้อเสนอแนะ</li>';
 
-        let acadEval = rowData['วิทยฐานะผู้รับการนิเทศ'] && rowData['วิทยฐานะผู้รับการนิเทศ'] !== '-' ? ' ' + rowData['วิทยฐานะผู้รับการนิเทศ'] : '';
-        
-        let summaryHtml = `
-            <div class="row">
-                <div class="col-md-6">
-                    <strong>รูปแบบ:</strong> ${rowData['รูปแบบการนิเทศ']} (ครั้งที่ ${rowData['ครั้งที่']})<br>
-                    <strong>วันที่:</strong> ${formatDateThai(rowData['วันที่สอน'])}<br>
-                    <strong>วิชา:</strong> ${rowData['รายวิชา']}<br>
-                    <strong>ผู้รับการนิเทศ:</strong> ${rowData['ชื่อผู้รับการนิเทศ']} (${rowData['ตำแหน่งผู้รับการนิเทศ']}${acadEval})<br>
-                    <strong>ผู้นิเทศ:</strong> ${rowData['ผู้นิเทศ']} <br>
+            let commentsListHtml = '';
+            for(let i=1; i<=7; i++) {
+                let cText = rowData[`ข้อเสนอแนะหมวด ${i}`];
+                if(cText && cText.trim() !== '') {
+                    commentsListHtml += `<li><strong>หมวด ${i}:</strong> ${cText}</li>`;
+                }
+            }
+            if(commentsListHtml === '') commentsListHtml = '<li class="text-muted">ไม่มีข้อเสนอแนะ</li>';
+
+            let acadEval = rowData['วิทยฐานะผู้รับการนิเทศ'] && rowData['วิทยฐานะผู้รับการนิเทศ'] !== '-' ? ' ' + rowData['วิทยฐานะผู้รับการนิเทศ'] : '';
+            
+            let summaryHtml = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>รูปแบบ:</strong> ${rowData['รูปแบบการนิเทศ']} (ครั้งที่ ${rowData['ครั้งที่']})<br>
+                        <strong>วันที่:</strong> ${formatDateThai(rowData['วันที่สอน'])}<br>
+                        <strong>วิชา:</strong> ${rowData['รายวิชา']}<br>
+                        <strong>ผู้รับการนิเทศ:</strong> ${rowData['ชื่อผู้รับการนิเทศ']} (${rowData['ตำแหน่งผู้รับการนิเทศ']}${acadEval})<br>
+                        <strong>ผู้นิเทศ:</strong> ${rowData['ผู้นิเทศ']} <br>
+                    </div>
+                    <div class="col-md-6 border-start">
+                        <strong>คะแนนรวม:</strong> <span class="text-danger fw-bold fs-5">${rowData['รวมคะแนนทั้งหมด']} / 200</span> 
+                        (ระดับ: <span class="text-success fw-bold">${rowData['สรุปผลระดับคุณภาพ']}</span>)<br>
+                    </div>
                 </div>
-                <div class="col-md-6 border-start">
-                    <strong>คะแนนรวม:</strong> <span class="text-danger fw-bold fs-5">${rowData['รวมคะแนนทั้งหมด']} / 200</span> 
-                    (ระดับ: <span class="text-success fw-bold">${rowData['สรุปผลระดับคุณภาพ']}</span>)<br>
+                <hr class="my-2">
+                <div class="mt-2" style="font-size: 0.9em; line-height: 1.6;">
+                    <strong>สรุปคะแนนรายหมวด:</strong><br>
+                    &bull; หมวดที่ 1 การเตรียมความพร้อมก่อนสอน ได้ <span class="text-primary fw-bold">${rowData['รวมคะแนนหมวด 1']}</span> คะแนน จากคะแนนเต็ม 15 คะแนน<br>
+                    &bull; หมวดที่ 2 การจัดกิจกรรมการเรียนรู้ ได้ <span class="text-primary fw-bold">${rowData['รวมคะแนนหมวด 2']}</span> คะแนน จากคะแนนเต็ม 50 คะแนน<br>
+                    &bull; หมวดที่ 3 การใช้สื่อเทคโนโลยี ได้ <span class="text-primary fw-bold">${rowData['รวมคะแนนหมวด 3']}</span> คะแนน จากคะแนนเต็ม 15 คะแนน<br>
+                    &bull; หมวดที่ 4 การจัดบรรยากาศและบริหารชั้นเรียน ได้ <span class="text-primary fw-bold">${rowData['รวมคะแนนหมวด 4']}</span> คะแนน จากคะแนนเต็ม 20 คะแนน<br>
+                    &bull; หมวดที่ 5 การวัดผลและประเมินผล ได้ <span class="text-primary fw-bold">${rowData['รวมคะแนนหมวด 5']}</span> คะแนน จากคะแนนเต็ม 25 คะแนน<br>
+                    &bull; หมวดที่ 6 ประเมินแผนการจัดการเรียนรู้ ได้ <span class="text-primary fw-bold">${rowData['รวมคะแนนหมวด 6']}</span> คะแนน จากคะแนนเต็ม 40 คะแนน<br>
+                    &bull; หมวดที่ 7 การบริหารจัดการชั้นเรียน ได้ <span class="text-primary fw-bold">${rowData['รวมคะแนนหมวด 7']}</span> คะแนน จากคะแนนเต็ม 35 คะแนน
                 </div>
-            </div>
-            <hr class="my-2">
-            <div class="mt-2" style="font-size: 0.9em; line-height: 1.6;">
-                <strong>สรุปคะแนนรายหมวด:</strong><br>
-                &bull; หมวดที่ 1 การเตรียมความพร้อมก่อนสอน ได้ <span class="text-primary fw-bold">${rowData['รวมคะแนนหมวด 1']}</span> คะแนน จากคะแนนเต็ม 15 คะแนน<br>
-                &bull; หมวดที่ 2 การจัดกิจกรรมการเรียนรู้ ได้ <span class="text-primary fw-bold">${rowData['รวมคะแนนหมวด 2']}</span> คะแนน จากคะแนนเต็ม 50 คะแนน<br>
-                &bull; หมวดที่ 3 การใช้สื่อเทคโนโลยี ได้ <span class="text-primary fw-bold">${rowData['รวมคะแนนหมวด 3']}</span> คะแนน จากคะแนนเต็ม 15 คะแนน<br>
-                &bull; หมวดที่ 4 การจัดบรรยากาศและบริหารชั้นเรียน ได้ <span class="text-primary fw-bold">${rowData['รวมคะแนนหมวด 4']}</span> คะแนน จากคะแนนเต็ม 20 คะแนน<br>
-                &bull; หมวดที่ 5 การวัดผลและประเมินผล ได้ <span class="text-primary fw-bold">${rowData['รวมคะแนนหมวด 5']}</span> คะแนน จากคะแนนเต็ม 25 คะแนน<br>
-                &bull; หมวดที่ 6 ประเมินแผนการจัดการเรียนรู้ ได้ <span class="text-primary fw-bold">${rowData['รวมคะแนนหมวด 6']}</span> คะแนน จากคะแนนเต็ม 40 คะแนน<br>
-                &bull; หมวดที่ 7 การบริหารจัดการชั้นเรียน ได้ <span class="text-primary fw-bold">${rowData['รวมคะแนนหมวด 7']}</span> คะแนน จากคะแนนเต็ม 35 คะแนน
-            </div>
-            <div class="mt-3 p-2 bg-white border border-info rounded" style="font-size: 0.9em;">
-                <h6 class="text-info fw-bold mb-1 border-bottom pb-1">สรุปข้อเสนอแนะรายหมวด:</h6>
-                <ul class="mb-0 ps-3 comments-list">
-                    ${commentsListHtml}
-                </ul>
-            </div>
-        `;
-        document.getElementById('modalSummaryInfo').innerHTML = summaryHtml;
-        execModal.show();
+                <div class="mt-3 p-2 bg-white border border-info rounded" style="font-size: 0.9em;">
+                    <h6 class="text-info fw-bold mb-1 border-bottom pb-1">สรุปข้อเสนอแนะรายหมวด:</h6>
+                    <ul class="mb-0 ps-3 comments-list">${commentsListHtml}</ul>
+                </div>
+            `;
+            document.getElementById('modalSummaryInfo').innerHTML = summaryHtml;
+            execModal.show();
+        });
     }
 
     function saveExecSignature() {
-        let btn = document.getElementById('saveExecBtn');
-        btn.innerHTML = 'กำลังบันทึก...'; btn.disabled = true;
+        Swal.fire({ title: 'กำลังบันทึกการลงนาม...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
 
         let payload = {
             rowIndex: document.getElementById('modalRowIndex').value,
@@ -757,21 +768,25 @@
         .then(res => res.json())
         .then(res => {
             if(res.status === 'success') {
-                alert('บันทึกการลงนามสำเร็จ!'); execModal.hide(); loadSummary(); 
+                Swal.fire('สำเร็จ!', 'บันทึกการลงนามเรียบร้อย', 'success');
+                execModal.hide(); loadSummary(); 
             }
-        })
-        .finally(() => { btn.innerHTML = 'บันทึกการลงนาม'; btn.disabled = false; });
+        });
     }
 
-    function generatePDF(rowIndex, btnElement) {
-        btnElement.innerHTML = 'กำลังสร้าง...'; btnElement.disabled = true;
+    function generatePDF(rowIndex) {
+        Swal.fire({ title: 'กำลังสร้างไฟล์ PDF...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
         fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'generatePDF', rowIndex: rowIndex }) })
         .then(res => res.json())
         .then(res => {
-            if(res.status === 'success') { alert('สร้างไฟล์ PDF สำเร็จ!'); loadSummary(); } 
-            else { alert('เกิดข้อผิดพลาด: ' + res.message); }
-        })
-        .finally(() => { btnElement.innerHTML = 'สร้าง'; btnElement.disabled = false; });
+            if(res.status === 'success') { 
+                Swal.fire('สำเร็จ!', 'สร้างไฟล์ PDF เรียบร้อยแล้ว', 'success');
+                loadSummary(); 
+            } else { 
+                Swal.fire('ข้อผิดพลาด', res.message, 'error'); 
+            }
+        });
     }
     
     document.addEventListener("DOMContentLoaded", function() { loadSummary(); });
