@@ -27,7 +27,6 @@
         .table-responsive { margin-bottom: 20px; }
         .question-text { text-align: left; font-size: 15px; }
         .comments-list li { margin-bottom: 5px; }
-        /* ตกแต่ง SweetAlert ให้ใช้ฟอนต์ Sarabun */
         .swal2-popup { font-family: 'Sarabun', sans-serif; }
     </style>
 </head>
@@ -52,6 +51,7 @@
     </ul>
 
     <div class="tab-content" id="mainTabContent">
+        <!-- แท็บ 1: ฟอร์มบันทึก -->
         <div class="tab-pane fade show active" id="form-pane">
             <form id="evalForm">
                 <div class="card shadow-sm mb-4">
@@ -112,7 +112,8 @@
                         </div>
                         <div class="col-12"><hr class="my-1"></div>
 
-                        <div class="col-md-4">
+                        <!-- ปรับ Layout ตามที่แจ้ง: รูปแบบการนิเทศ -> ระดับชั้น -> รายวิชา -> รหัสวิชา -->
+                        <div class="col-md-3">
                             <label class="form-label">รูปแบบการนิเทศ</label>
                             <select class="form-select" id="supervisionFormat" required>
                                 <option value="">-- เลือกรูปแบบ --</option>
@@ -120,14 +121,6 @@
                                 <option value="นิเทศโดยฝ่ายวิชาการ">นิเทศโดยฝ่ายวิชาการ</option>
                                 <option value="นิเทศโดยผู้บริหาร">นิเทศโดยผู้บริหาร</option>
                             </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">รายวิชา</label>
-                            <input type="text" class="form-control" id="subject" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">รหัสวิชา</label>
-                            <input type="text" class="form-control" id="subjectCode" required>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">ระดับชั้น</label>
@@ -142,10 +135,23 @@
                             </select>
                         </div>
                         <div class="col-md-3">
+                            <label class="form-label">รายวิชา</label>
+                            <!-- เปลี่ยนเป็น Dropdown ดึงค่าอัตโนมัติตามระดับชั้น -->
+                            <select class="form-select" id="subject" required>
+                                <option value="">-- เลือกรายวิชา --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">รหัสวิชา</label>
+                            <!-- ล็อกช่องนี้ไว้ให้ระบบดึงรหัสมาเติมเองอัตโนมัติ -->
+                            <input type="text" class="form-control bg-light" id="subjectCode" readonly required>
+                        </div>
+                        
+                        <div class="col-md-4">
                             <label class="form-label">วันที่สอน</label>
                             <input type="date" class="form-control" id="date" required>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label">เวลา</label>
                             <select class="form-select" id="time" required>
                                 <option value="">-- เลือกเวลา --</option>
@@ -157,12 +163,12 @@
                                 <option value="14.30 - 15.30 น.">14.30 - 15.30 น.</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label">ครั้งที่</label>
                             <select class="form-select" id="sessionRound" required>
                                 <option value="">-- เลือก --</option>
-                                <option value="'1/2569">1/2569</option>
-                                <option value="'2/2569">2/2569</option>
+                                <option value="1/2569">1/2569</option>
+                                <option value="2/2569">2/2569</option>
                             </select>
                         </div>
                     </div>
@@ -201,6 +207,7 @@
             </form>
         </div>
 
+        <!-- แท็บ 2: สรุปผลการนิเทศ -->
         <div class="tab-pane fade" id="summary-pane">
             <div class="card shadow-sm mb-5">
                 <div class="card-header bg-dark text-white">ตารางสรุปผลการนิเทศย้อนหลัง</div>
@@ -228,7 +235,9 @@
             </div>
         </div>
 
+        <!-- แท็บ 3: สารสนเทศ Dashboard -->
         <div class="tab-pane fade" id="dashboard-pane">
+            <!-- ส่วนที่ 1: ภาพรวม -->
             <div class="card shadow-sm mb-4 border-info">
                 <div class="card-header bg-info text-white fw-bold">ส่วนที่ 1: สารสนเทศการนิเทศรวม</div>
                 <div class="card-body">
@@ -255,6 +264,7 @@
                 </div>
             </div>
 
+            <!-- ส่วนที่ 2: รายบุคคล -->
             <div class="card shadow-sm mb-5 border-success">
                 <div class="card-header bg-success text-white fw-bold">ส่วนที่ 2: สารสนเทศการนิเทศรายบุคคล</div>
                 <div class="card-body">
@@ -287,6 +297,7 @@
     </div>
 </div>
 
+<!-- Modal สำหรับผู้บริหารลงนาม -->
 <div class="modal fade" id="execSignModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -410,6 +421,52 @@
         return `${d.getDate()} ${months[d.getMonth()]} พ.ศ. ${thaiYear}`;
     }
     
+    function parseDateToInputFormat(dateStr) {
+        if(!dateStr) return '';
+        try {
+            let d = new Date(dateStr);
+            if(isNaN(d.getTime())) {
+                let parts = dateStr.split('/');
+                if(parts.length === 3) d = new Date(parts[2], parts[1]-1, parts[0]);
+            }
+            if(isNaN(d.getTime())) return '';
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        } catch(e) { return ''; }
+    }
+
+    // ====== ส่วนระบบรายวิชาอัตโนมัติ ======
+    let masterSubjects = [];
+    
+    function loadSubjects() {
+        fetch(GAS_URL + "?action=getSubjectData")
+        .then(res => res.json())
+        .then(data => { masterSubjects = data; })
+        .catch(err => console.error("Error loading subjects:", err));
+    }
+
+    document.getElementById('classLevel').addEventListener('change', function() {
+        let selectedClass = this.value;
+        let subjectSelect = document.getElementById('subject');
+        subjectSelect.innerHTML = '<option value="">-- เลือกรายวิชา --</option>';
+        document.getElementById('subjectCode').value = '';
+        
+        if(!selectedClass) return;
+        
+        let filtered = masterSubjects.filter(s => s.classLevel === selectedClass);
+        let uniqueSubjects = [...new Set(filtered.map(s => s.subjectName))];
+        uniqueSubjects.forEach(sub => {
+            subjectSelect.innerHTML += `<option value="${sub}">${sub}</option>`;
+        });
+    });
+
+    document.getElementById('subject').addEventListener('change', function() {
+        let selectedClass = document.getElementById('classLevel').value;
+        let selectedSubject = this.value;
+        let matched = masterSubjects.find(s => s.classLevel === selectedClass && s.subjectName === selectedSubject);
+        document.getElementById('subjectCode').value = matched ? matched.subjectCode : '';
+    });
+    // ===================================
+
     let currentSummaryData = [];
     let editModeRowIndex = null; 
 
@@ -430,7 +487,8 @@
 
     function updateDashOverall() {
         let session = document.getElementById('dashOverallSession').value;
-        let data = currentSummaryData.filter(r => r['ครั้งที่'] === session);
+        // ลบเครื่องหมาย ' ออกตอนดึงข้อมูลมากรอง เพราะตอนบันทึกลงชีตเราบังคับให้เป็น Text ไว้
+        let data = currentSummaryData.filter(r => (r['ครั้งที่'] || '').replace(/'/g, '') === session);
         let avgsPerc = [0,0,0,0,0,0,0];
         let teacherData = {};
         let totalAvgPercent = 0;
@@ -483,7 +541,7 @@
     function updateDashIndiv() {
         let session = document.getElementById('dashIndivSession').value;
         let evaluatee = document.getElementById('dashIndivEvaluatee').value;
-        let data = currentSummaryData.filter(r => r['ครั้งที่'] === session && r['ชื่อผู้รับการนิเทศ'] === evaluatee);
+        let data = currentSummaryData.filter(r => (r['ครั้งที่'] || '').replace(/'/g, '') === session && r['ชื่อผู้รับการนิเทศ'] === evaluatee);
         
         let avgsPerc = [0,0,0,0,0,0,0];
         let totalAvgPercent = 0;
@@ -515,12 +573,11 @@
         });
     }
 
-    // ====== ฟังก์ชันจัดการรหัสผ่าน (SweetAlert2) ======
     async function checkPassword(callback) {
         const { value: password } = await Swal.fire({
             title: 'เข้าสู่ระบบผู้บริหาร',
             input: 'password',
-            inputLabel: 'กรุณากรอกรหัสผ่าน',
+            inputLabel: 'กรุณากรอกรหัสผ่าน (siri)',
             inputPlaceholder: 'รหัสผ่าน',
             showCancelButton: true,
             confirmButtonText: 'ตกลง',
@@ -550,8 +607,11 @@
                 let dirBtn = !!row['URL ลายเซ็น ผอ.'] ? 'btn-success' : 'btn-danger';
                 let loadBtn = row['URL ไฟล์ PDF'] ? `<a href="${row['URL ไฟล์ PDF']}" target="_blank" class="btn btn-sm btn-outline-danger mt-1">โหลด</a>` : '';
                 
+                // ลบ ' ออกเพื่อแสดงผลให้สวยงาม
+                let displaySession = (row['ครั้งที่'] || '').replace(/'/g, '');
+
                 html += `<tr>
-                    <td>${row['ครั้งที่']}</td>
+                    <td>${displaySession}</td>
                     <td>${formatDateThai(row['วันที่สอน'])}</td>
                     <td class="text-start">${row['ชื่อผู้รับการนิเทศ']}</td>
                     <td class="text-start">${row['ผู้นิเทศ']}</td>
@@ -584,12 +644,26 @@
             document.getElementById('evaluatorPosition').value = row['ตำแหน่งผู้นิเทศ'] || '';
             document.getElementById('evaluatorAcademic').value = row['วิทยฐานะผู้นิเทศ'] || '';
             document.getElementById('supervisionFormat').value = row['รูปแบบการนิเทศ'] || '';
-            document.getElementById('subject').value = row['รายวิชา'] || '';
-            document.getElementById('subjectCode').value = row['รหัสวิชา'] || '';
+            
+            // ตั้งค่าระดับชั้น แล้วจำลองให้โหลดรายวิชา
             document.getElementById('classLevel').value = row['ระดับชั้น'] || '';
-            document.getElementById('date').value = row['วันที่สอน']; // ดึงมาเป็น YYYY-MM-DD ได้เลย
+            document.getElementById('classLevel').dispatchEvent(new Event('change'));
+            
+            // ใส่ข้อมูลรายวิชา (ตรวจสอบว่ามีใน Dropdown หรือยัง หากไม่มีให้เพิ่มเข้าไป)
+            let subjectSelect = document.getElementById('subject');
+            let subjVal = row['รายวิชา'] || '';
+            if (subjVal) {
+                if (!Array.from(subjectSelect.options).some(opt => opt.value === subjVal)) {
+                    subjectSelect.innerHTML += `<option value="${subjVal}">${subjVal}</option>`;
+                }
+                subjectSelect.value = subjVal;
+            }
+            
+            document.getElementById('subjectCode').value = row['รหัสวิชา'] || '';
+            
+            document.getElementById('date').value = parseDateToInputFormat(row['วันที่สอน']); 
             document.getElementById('time').value = row['เวลา'] || '';
-            document.getElementById('sessionRound').value = row['ครั้งที่'] || '';
+            document.getElementById('sessionRound').value = (row['ครั้งที่'] || '').replace(/'/g, '');
 
             categoriesData.forEach((cat, index) => {
                 let catNum = index + 1;
@@ -722,7 +796,7 @@
             let summaryHtml = `
                 <div class="row">
                     <div class="col-md-6">
-                        <strong>รูปแบบ:</strong> ${rowData['รูปแบบการนิเทศ']} (ครั้งที่ ${rowData['ครั้งที่']})<br>
+                        <strong>รูปแบบ:</strong> ${rowData['รูปแบบการนิเทศ']} (ครั้งที่ ${(rowData['ครั้งที่']||'').replace(/'/g, '')})<br>
                         <strong>วันที่:</strong> ${formatDateThai(rowData['วันที่สอน'])}<br>
                         <strong>วิชา:</strong> ${rowData['รายวิชา']}<br>
                         <strong>ผู้รับการนิเทศ:</strong> ${rowData['ชื่อผู้รับการนิเทศ']} (${rowData['ตำแหน่งผู้รับการนิเทศ']}${acadEval})<br>
@@ -789,7 +863,10 @@
         });
     }
     
-    document.addEventListener("DOMContentLoaded", function() { loadSummary(); });
+    document.addEventListener("DOMContentLoaded", function() { 
+        loadSummary(); 
+        loadSubjects(); // ดึงข้อมูลรายวิชาอัตโนมัติตั้งแต่เปิดเว็บ
+    });
 </script>
 
 </body>
