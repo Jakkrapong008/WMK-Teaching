@@ -28,6 +28,25 @@
         .question-text { text-align: left; font-size: 15px; }
         .comments-list li { margin-bottom: 5px; }
         .swal2-popup { font-family: 'Sarabun', sans-serif; }
+        
+        /* CSS เพิ่มเติม สำหรับขยายพื้นที่กดในตารางคะแนน */
+        .table-radio-cell {
+            padding: 0 !important; /* เอา Padding ของ td ออกเพื่อใช้ Label ให้เต็มช่อง */
+            vertical-align: middle;
+        }
+        .table-radio-label {
+            display: block;
+            width: 100%;
+            height: 100%;
+            padding: 15px 0; /* ขยายขนาดการรับสัมผัสบนล่าง */
+            margin: 0;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .table-radio-label:hover {
+            background-color: #fff3cd; /* เปลี่ยนเป็นสีเหลืองอ่อนเมื่อเอานิ้วแตะหรือเมาส์ชี้ */
+        }
+        input[type="radio"] { cursor: pointer; }
     </style>
 </head>
 <body>
@@ -112,7 +131,6 @@
                         </div>
                         <div class="col-12"><hr class="my-1"></div>
 
-                        <!-- ปรับ Layout ตามที่แจ้ง: รูปแบบการนิเทศ -> ระดับชั้น -> รายวิชา -> รหัสวิชา -->
                         <div class="col-md-3">
                             <label class="form-label">รูปแบบการนิเทศ</label>
                             <select class="form-select" id="supervisionFormat" required>
@@ -136,14 +154,12 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">รายวิชา</label>
-                            <!-- เปลี่ยนเป็น Dropdown ดึงค่าอัตโนมัติตามระดับชั้น -->
                             <select class="form-select" id="subject" required>
                                 <option value="">-- เลือกรายวิชา --</option>
                             </select>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">รหัสวิชา</label>
-                            <!-- ล็อกช่องนี้ไว้ให้ระบบดึงรหัสมาเติมเองอัตโนมัติ -->
                             <input type="text" class="form-control bg-light" id="subjectCode" readonly required>
                         </div>
                         
@@ -237,7 +253,6 @@
 
         <!-- แท็บ 3: สารสนเทศ Dashboard -->
         <div class="tab-pane fade" id="dashboard-pane">
-            <!-- ส่วนที่ 1: ภาพรวม -->
             <div class="card shadow-sm mb-4 border-info">
                 <div class="card-header bg-info text-white fw-bold">ส่วนที่ 1: สารสนเทศการนิเทศรวม</div>
                 <div class="card-body">
@@ -264,7 +279,6 @@
                 </div>
             </div>
 
-            <!-- ส่วนที่ 2: รายบุคคล -->
             <div class="card shadow-sm mb-5 border-success">
                 <div class="card-header bg-success text-white fw-bold">ส่วนที่ 2: สารสนเทศการนิเทศรายบุคคล</div>
                 <div class="card-body">
@@ -293,7 +307,6 @@
                 </div>
             </div>
         </div>
-
     </div>
 </div>
 
@@ -373,9 +386,14 @@
                         <tbody>`;
         cat.questions.forEach((qText, qIndex) => {
             let qNum = qIndex + 1;
-            htmlContent += `<tr><td class="question-text"><strong>${catNum}.${qNum}</strong> ${qText}</td>`;
+            htmlContent += `<tr><td class="question-text align-middle"><strong>${catNum}.${qNum}</strong> ${qText}</td>`;
             for (let score = 5; score >= 1; score--) {
-                htmlContent += `<td class="text-center"><input class="form-check-input score-radio" type="radio" name="q${catNum}_${qNum}" value="${score}" required onchange="calculateScore()"></td>`;
+                // แก้ไข: ใช้ Label ขยายเต็มช่อง เพื่อให้กดได้ง่ายบนมือถือ
+                htmlContent += `<td class="text-center table-radio-cell">
+                    <label class="table-radio-label">
+                        <input class="form-check-input score-radio" type="radio" name="q${catNum}_${qNum}" value="${score}" required onchange="calculateScore()">
+                    </label>
+                </td>`;
             }
             htmlContent += `</tr>`;
         });
@@ -434,9 +452,7 @@
         } catch(e) { return ''; }
     }
 
-    // ====== ส่วนระบบรายวิชาอัตโนมัติ ======
     let masterSubjects = [];
-    
     function loadSubjects() {
         fetch(GAS_URL + "?action=getSubjectData")
         .then(res => res.json())
@@ -449,7 +465,6 @@
         let subjectSelect = document.getElementById('subject');
         subjectSelect.innerHTML = '<option value="">-- เลือกรายวิชา --</option>';
         document.getElementById('subjectCode').value = '';
-        
         if(!selectedClass) return;
         
         let filtered = masterSubjects.filter(s => s.classLevel === selectedClass);
@@ -465,7 +480,6 @@
         let matched = masterSubjects.find(s => s.classLevel === selectedClass && s.subjectName === selectedSubject);
         document.getElementById('subjectCode').value = matched ? matched.subjectCode : '';
     });
-    // ===================================
 
     let currentSummaryData = [];
     let editModeRowIndex = null; 
@@ -487,7 +501,6 @@
 
     function updateDashOverall() {
         let session = document.getElementById('dashOverallSession').value;
-        // ลบเครื่องหมาย ' ออกตอนดึงข้อมูลมากรอง เพราะตอนบันทึกลงชีตเราบังคับให้เป็น Text ไว้
         let data = currentSummaryData.filter(r => (r['ครั้งที่'] || '').replace(/'/g, '') === session);
         let avgsPerc = [0,0,0,0,0,0,0];
         let teacherData = {};
@@ -577,7 +590,7 @@
         const { value: password } = await Swal.fire({
             title: 'เข้าสู่ระบบผู้บริหาร',
             input: 'password',
-            inputLabel: 'กรุณากรอกรหัสผ่าน',
+            inputLabel: 'กรุณากรอกรหัสผ่าน (siri)',
             inputPlaceholder: 'รหัสผ่าน',
             showCancelButton: true,
             confirmButtonText: 'ตกลง',
@@ -607,7 +620,6 @@
                 let dirBtn = !!row['URL ลายเซ็น ผอ.'] ? 'btn-success' : 'btn-danger';
                 let loadBtn = row['URL ไฟล์ PDF'] ? `<a href="${row['URL ไฟล์ PDF']}" target="_blank" class="btn btn-sm btn-outline-danger mt-1">โหลด</a>` : '';
                 
-                // ลบ ' ออกเพื่อแสดงผลให้สวยงาม
                 let displaySession = (row['ครั้งที่'] || '').replace(/'/g, '');
 
                 html += `<tr>
@@ -645,11 +657,9 @@
             document.getElementById('evaluatorAcademic').value = row['วิทยฐานะผู้นิเทศ'] || '';
             document.getElementById('supervisionFormat').value = row['รูปแบบการนิเทศ'] || '';
             
-            // ตั้งค่าระดับชั้น แล้วจำลองให้โหลดรายวิชา
             document.getElementById('classLevel').value = row['ระดับชั้น'] || '';
             document.getElementById('classLevel').dispatchEvent(new Event('change'));
             
-            // ใส่ข้อมูลรายวิชา (ตรวจสอบว่ามีใน Dropdown หรือยัง หากไม่มีให้เพิ่มเข้าไป)
             let subjectSelect = document.getElementById('subject');
             let subjVal = row['รายวิชา'] || '';
             if (subjVal) {
@@ -660,7 +670,6 @@
             }
             
             document.getElementById('subjectCode').value = row['รหัสวิชา'] || '';
-            
             document.getElementById('date').value = parseDateToInputFormat(row['วันที่สอน']); 
             document.getElementById('time').value = row['เวลา'] || '';
             document.getElementById('sessionRound').value = (row['ครั้งที่'] || '').replace(/'/g, '');
@@ -865,7 +874,7 @@
     
     document.addEventListener("DOMContentLoaded", function() { 
         loadSummary(); 
-        loadSubjects(); // ดึงข้อมูลรายวิชาอัตโนมัติตั้งแต่เปิดเว็บ
+        loadSubjects(); 
     });
 </script>
 
